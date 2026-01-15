@@ -1,14 +1,17 @@
 
 {
+  "id": "com.farmledger.pro",
   "name": "FarmLedger Pro",
   "short_name": "FarmLedger",
-  "description": "Professional customer ledger and supply tracking for farm businesses.",
-  "start_url": ".",
+  "description": "Professional customer ledger and supply tracking for farm businesses. Features offline support, detailed reporting, and automatic balance calculations.",
+  "lang": "en-US",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f8fafc",
+  "background_color": "#ffffff",
   "theme_color": "#1d4ed8",
   "orientation": "portrait",
-  "scope": "/",
+  "scope": "./",
+  "categories": ["business", "finance", "productivity"],
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2371/2371970.png",
@@ -21,6 +24,39 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2371/2371970.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Add Daily Supply",
+      "url": "./index.html",
+      "description": "Quickly record daily supply and payments"
+    },
+    {
+      "name": "Customer Directory",
+      "url": "./index.html",
+      "description": "Manage your customer list"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://images.unsplash.com/photo-1586717791821-3f44a563dc4c?auto=format&fit=crop&w=1000&q=80",
+      "sizes": "1000x2000",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Daily Supply Interface"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1000&q=80",
+      "sizes": "1000x600",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Business Dashboard"
     }
   ]
 }
