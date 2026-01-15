@@ -1,10 +1,10 @@
 {
-  "id": "com.farmledger.pro.v2",
+  "id": "com.farmledger.pro.v3",
   "name": "FarmLedger Pro",
   "short_name": "FarmLedger",
   "description": "Professional customer ledger and supply tracking for farm businesses. Features offline support, detailed reporting, and automatic balance calculations.",
   "lang": "en-US",
-  "start_url": "index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1d4ed8",
@@ -33,9 +33,9 @@
   ],
   "shortcuts": [
     {
-      "name": "Add Daily Supply",
-      "url": "index.html",
-      "description": "Quickly record daily supply and payments"
+      "name": "Daily Sheet",
+      "url": "./index.html",
+      "description": "Open Daily Record Sheet"
     }
   ],
   "screenshots": [

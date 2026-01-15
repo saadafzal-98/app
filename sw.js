@@ -1,4 +1,6 @@
-const CACHE_NAME = 'farmledger-pro-v2';
+const CACHE_NAME = 'farmledger-pro-v3';
+const OFFLINE_URL = 'index.html';
+
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -11,10 +13,8 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Use promise.allSettled to ensure installation completes even if one non-critical asset fails
-      return Promise.allSettled(
-        ASSETS_TO_CACHE.map(url => cache.add(url))
-      );
+      console.log('PWA: Caching assets');
+      return cache.addAll(ASSETS_TO_CACHE);
     })
   );
   self.skipWaiting();
@@ -27,6 +27,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
+            console.log('PWA: Clearing old cache', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -36,25 +37,38 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch event: Network first, fallback to cache for better data accuracy
+// Fetch event: Network-first strategy with cache fallback
 self.addEventListener('fetch', (event) => {
+  // Only handle GET requests
   if (event.request.method !== 'GET') return;
 
+  // For navigation requests, try network then fallback to offline page
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.open(CACHE_NAME).then((cache) => {
+          return cache.match(OFFLINE_URL);
+        });
+      })
+    );
+    return;
+  }
+
+  // For other assets, try cache then network
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // Only cache valid successful responses
-        if (response && response.status === 200 && response.type === 'basic') {
-          const responseToCache = response.clone();
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request).then((networkResponse) => {
+        // Cache new successful responses
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
           });
         }
-        return response;
-      })
-      .catch(() => {
-        // Offline fallback
-        return caches.match(event.request);
-      })
+        return networkResponse;
+      });
+    }).catch(() => {
+      // Return nothing if both fail (browser default)
+    })
   );
 });

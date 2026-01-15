@@ -38,16 +38,15 @@
 <body class="bg-gray-50 text-gray-900 selection:bg-blue-100">
     <div id="root"></div>
     <script>
-        // Use a strictly relative path without the leading dot to resolve origin issues in sandboxed environments
+        // Register service worker with standard relative path
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js', { scope: './' })
+                navigator.serviceWorker.register('./sw.js')
                     .then(reg => {
                         console.log('PWA: Service Worker registered', reg.scope);
                     })
                     .catch(err => {
-                        // Log specifically for debugging but don't crash
-                        console.warn('PWA: Service Worker registration failed:', err.message);
+                        console.error('PWA: Service Worker registration failed:', err);
                     });
             });
         }
