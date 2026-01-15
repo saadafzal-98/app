@@ -1,14 +1,16 @@
 
 {
+  "id": "com.farmledger.pro",
   "name": "FarmLedger Pro",
   "short_name": "FarmLedger",
-  "description": "Professional customer ledger and supply tracking for farm businesses.",
+  "description": "Professional customer ledger and supply tracking for farm businesses. Features offline support and automatic balance calculations.",
+  "lang": "en-US",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f8fafc",
+  "background_color": "#ffffff",
   "theme_color": "#1d4ed8",
   "orientation": "portrait",
-  "categories": ["business", "finance"],
+  "categories": ["business", "finance", "productivity"],
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2371/2371970.png",
@@ -31,30 +33,30 @@
   ],
   "screenshots": [
     {
-      "src": "https://images.unsplash.com/photo-1586717791821-3f44a563dc4c?q=80&w=1000&auto=format&fit=crop",
+      "src": "https://images.unsplash.com/photo-1586717791821-3f44a563dc4c?auto=format&fit=crop&w=1000&q=80",
       "sizes": "1000x2000",
       "type": "image/jpeg",
       "form_factor": "narrow",
-      "label": "Mobile Dashboard"
+      "label": "Daily Supply Entry Screen"
     },
     {
-      "src": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1000&auto=format&fit=crop",
+      "src": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1000&q=80",
       "sizes": "1000x600",
       "type": "image/jpeg",
       "form_factor": "wide",
-      "label": "Desktop Overview"
+      "label": "Business Dashboard Overview"
     }
   ],
   "shortcuts": [
     {
-      "name": "Daily Record",
+      "name": "Add Daily Record",
       "url": "./index.html",
-      "description": "Open Daily Supply Entry"
+      "description": "Quickly record daily supply and payments"
     },
     {
-      "name": "Customers",
+      "name": "Customer List",
       "url": "./index.html",
-      "description": "View Customer List"
+      "description": "Manage your customer directory"
     }
   ]
 }

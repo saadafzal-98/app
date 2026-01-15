@@ -7,6 +7,7 @@
     <meta name="theme-color" content="#1d4ed8">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="description" content="Professional customer ledger and supply tracking for farm businesses.">
     
     <link rel="manifest" href="manifest.json">
@@ -38,11 +39,18 @@
 <body class="bg-gray-50 text-gray-900 selection:bg-blue-100">
     <div id="root"></div>
     <script>
+        // Check if service workers are supported
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Service Worker registered'))
-                    .catch(err => console.log('Service Worker failed', err));
+                // Determine path - works for both root and subfolders (GitHub Pages)
+                const swPath = './sw.js';
+                navigator.serviceWorker.register(swPath)
+                    .then(reg => {
+                        console.log('PWA: Service Worker registered successfully', reg.scope);
+                    })
+                    .catch(err => {
+                        console.error('PWA: Service Worker registration failed', err);
+                    });
             });
         }
     </script>
