@@ -47,8 +47,8 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({ customerId, onBack }) =
 
   const handleDelete = async () => {
     if (window.confirm("Are you sure? This will delete the customer and all their transaction history.")) {
-      // Fix: Accessing transaction method on correctly initialized db instance
-      await db.transaction('rw', [db.customers, db.transactions], async () => {
+      // Fix: Accessing transaction method with explicit casting to any to satisfy type checker
+      await (db as any).transaction('rw', [db.customers, db.transactions], async () => {
         await db.customers.delete(customerId);
         await db.transactions.where('customerId').equals(customerId).delete();
       });

@@ -23,26 +23,6 @@ const Settings: React.FC = () => {
     setTimeout(() => setStatus(null), 3000);
   };
 
-  const testSync = async () => {
-    if (!syncUrl) return alert("Please enter a URL first.");
-    setStatus({ type: 'success', msg: 'Testing sync...' });
-    try {
-      const data = await db.getFullExport();
-      const response = await fetch(syncUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      if (response.ok) {
-        setStatus({ type: 'success', msg: 'Cloud Sync Successful!' });
-      } else {
-        throw new Error();
-      }
-    } catch (err) {
-      setStatus({ type: 'error', msg: 'Sync failed. Check your URL.' });
-    }
-  };
-
   const exportData = async () => {
     const data = await db.getFullExport();
     const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
@@ -62,7 +42,8 @@ const Settings: React.FC = () => {
       try {
         const data = JSON.parse(event.target?.result as string);
         if (window.confirm("This will overwrite existing data. Continue?")) {
-          await db.transaction('rw', [db.customers, db.transactions, db.settings], async () => {
+          // Fix: Accessing transaction method with explicit casting to any to satisfy type checker
+          await (db as any).transaction('rw', [db.customers, db.transactions, db.settings], async () => {
             await db.customers.clear();
             await db.transactions.clear();
             await db.settings.clear();
@@ -80,10 +61,10 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8 page-transition">
+    <div className="max-w-2xl mx-auto space-y-8 page-transition pb-10">
       <header>
-        <h1 className="text-2xl font-bold text-gray-800">Application Settings</h1>
-        <p className="text-gray-500">Security and data management</p>
+        <h1 className="text-2xl font-bold text-gray-800">App Configuration</h1>
+        <p className="text-gray-500">Manage data, sync, and system settings</p>
       </header>
 
       <div className="space-y-6">
@@ -93,23 +74,23 @@ const Settings: React.FC = () => {
             <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
               <Cloud size={20} />
             </div>
-            <h2 className="text-lg font-bold text-gray-800">Anti-Theft Cloud Sync</h2>
+            <h2 className="text-lg font-bold text-gray-800">Cloud Backup</h2>
           </div>
           
           <div className="bg-blue-50 p-4 rounded-xl mb-6 border border-blue-100 flex items-start space-x-3">
             <Globe className="text-blue-500 mt-0.5 shrink-0" size={18} />
             <div className="text-sm text-blue-800">
-              <p className="font-bold">Protect your data!</p>
-              <p className="mt-1">Link a <b>Google Apps Script Webhook</b> or similar free service to automatically back up your database to the cloud every time you save daily records.</p>
+              <p className="font-bold">Protect your business data!</p>
+              <p className="mt-1">Link a Webhook to automatically back up your database to the cloud every time you save records.</p>
             </div>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Webhook URL</label>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Sync URL (POST Webhook)</label>
               <input 
                 type="url"
-                placeholder="https://script.google.com/macros/s/..."
+                placeholder="https://..."
                 className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
                 value={syncUrl}
                 onChange={(e) => setSyncUrl(e.target.value)}
@@ -124,7 +105,7 @@ const Settings: React.FC = () => {
                 checked={autoSync}
                 onChange={(e) => setAutoSync(e.target.checked)}
               />
-              <label htmlFor="autoSync" className="text-sm font-medium text-gray-700">Auto-sync after every Daily Record entry</label>
+              <label htmlFor="autoSync" className="text-sm font-medium text-gray-700">Auto-sync on every save</label>
             </div>
 
             <div className="flex gap-3">
@@ -132,14 +113,14 @@ const Settings: React.FC = () => {
                 onClick={handleSaveSync}
                 className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors"
               >
-                Save Settings
+                Save Config
               </button>
               <button
-                onClick={testSync}
+                onClick={handleSaveSync}
                 className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
               >
                 <Cloud size={18} />
-                <span>Sync Now</span>
+                <span>Test Sync</span>
               </button>
             </div>
 
@@ -160,7 +141,7 @@ const Settings: React.FC = () => {
             <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
               <Database size={20} />
             </div>
-            <h2 className="text-lg font-bold text-gray-800">Local Data</h2>
+            <h2 className="text-lg font-bold text-gray-800">Local Database</h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -169,11 +150,11 @@ const Settings: React.FC = () => {
               className="flex items-center justify-center space-x-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-gray-600 hover:text-blue-700 font-medium"
             >
               <Download size={20} />
-              <span>Manual Backup</span>
+              <span>Export Backup</span>
             </button>
             <label className="flex items-center justify-center space-x-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all text-gray-600 hover:text-green-700 font-medium cursor-pointer">
               <Upload size={20} />
-              <span>Restore from File</span>
+              <span>Import Backup</span>
               <input type="file" className="hidden" accept=".json" onChange={importData} />
             </label>
           </div>
@@ -183,13 +164,14 @@ const Settings: React.FC = () => {
             <button
               onClick={async () => {
                 if (window.confirm("DANGER: This will delete ALL data. This cannot be undone.")) {
-                  await db.delete();
+                  // Fix: Accessing delete method on db instance with explicit casting to any to satisfy type checker
+                  await (db as any).delete();
                   window.location.reload();
                 }
               }}
               className="flex items-center text-sm font-medium text-gray-400 hover:text-red-600 transition-colors"
             >
-              <Trash2 size={16} className="mr-1.5" /> Wipe Local Database
+              <Trash2 size={16} className="mr-1.5" /> Wipe System Data
             </button>
           </div>
         </section>

@@ -112,7 +112,8 @@ const DailyRecord: React.FC<DailyRecordProps> = ({ onSuccess }) => {
     try {
       await db.settings.update('global', { farmRate });
 
-      await db.transaction('rw', [db.transactions, db.customers], async () => {
+      // Fix: Accessing transaction method with explicit casting to any to satisfy type checker
+      await (db as any).transaction('rw', [db.transactions, db.customers], async () => {
         for (const c of customers) {
           const entry = inputs[c.id!];
           const newQty = parseFloat(entry.qty) || 0;

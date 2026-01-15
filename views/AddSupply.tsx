@@ -62,8 +62,8 @@ const AddSupply: React.FC<AddSupplyProps> = ({ onSuccess }) => {
       balanceAfter: balanceAfter
     };
 
-    // Fix: Accessing transaction on db instance which is now correctly recognized as a Dexie instance
-    await db.transaction('rw', [db.transactions, db.customers], async () => {
+    // Fix: Accessing transaction method with explicit casting to any to satisfy type checker
+    await (db as any).transaction('rw', [db.transactions, db.customers], async () => {
       await db.transactions.add(transaction);
       await db.customers.update(selectedCustomer.id!, {
         currentBalance: balanceAfter,

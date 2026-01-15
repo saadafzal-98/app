@@ -1,0 +1,9 @@
+{
+  "appId": "com.farmledger.pro",
+  "appName": "FarmLedger Pro",
+  "webDir": ".",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}

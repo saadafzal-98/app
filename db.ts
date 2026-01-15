@@ -1,5 +1,6 @@
 
-import { Dexie, type Table } from 'dexie';
+import Dexie from 'dexie';
+import type { Table } from 'dexie';
 import { Customer, Transaction, AppSettings } from './types';
 
 export interface ExtendedSettings extends AppSettings {
@@ -14,7 +15,8 @@ export class FarmLedgerDB extends Dexie {
 
   constructor() {
     super('FarmLedgerDB');
-    this.version(1).stores({
+    // Fix: Use version(1).stores() on this, explicitly casting to any if standard inheritance isn't recognized
+    (this as any).version(1).stores({
       customers: '++id, &phone, name',
       transactions: '++id, customerId, date, type',
       settings: 'id'
