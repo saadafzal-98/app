@@ -1,24 +1,15 @@
 
 {
-  "id": "com.farmledger.pro.v1",
   "name": "FarmLedger Pro",
   "short_name": "FarmLedger",
-  "description": "A professional-grade mobile customer ledger and supply tracking application for farm businesses. Works offline with automatic data persistence and balance calculations.",
-  "lang": "en-US",
-  "start_url": "index.html",
-  "scope": "./",
+  "description": "Professional customer ledger and supply tracking for farm businesses.",
+  "start_url": ".",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#f8fafc",
   "theme_color": "#1d4ed8",
   "orientation": "portrait",
-  "categories": ["business", "finance", "productivity"],
+  "scope": "/",
   "icons": [
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/2371/2371970.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2371/2371970.png",
       "sizes": "512x512",
@@ -30,34 +21,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "https://images.unsplash.com/photo-1586717791821-3f44a563dc4c?auto=format&fit=crop&w=1000&q=80",
-      "sizes": "1000x2000",
-      "type": "image/jpeg",
-      "form_factor": "narrow",
-      "label": "Mobile Supply Entry"
-    },
-    {
-      "src": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1000&q=80",
-      "sizes": "1000x600",
-      "type": "image/jpeg",
-      "form_factor": "wide",
-      "label": "Dashboard Statistics"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Add Daily Record",
-      "url": "index.html",
-      "description": "Record today's supply and payments"
-    },
-    {
-      "name": "View Customers",
-      "url": "index.html",
-      "description": "Open customer directory"
     }
   ]
 }
