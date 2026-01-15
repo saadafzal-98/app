@@ -2,25 +2,17 @@
 {
   "name": "FarmLedger Pro",
   "short_name": "FarmLedger",
-  "description": "Professional customer ledger and supply tracking for farm businesses.",
-  "start_url": ".",
+  "description": "Customer ledger and supply tracking for farm businesses.",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#f8fafc",
+  "background_color": "#ffffff",
   "theme_color": "#1d4ed8",
-  "orientation": "portrait",
-  "scope": "/",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2371/2371970.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/2371/2371970.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ]
 }
