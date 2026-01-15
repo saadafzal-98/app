@@ -1,22 +1,25 @@
 
-# FarmLedger Pro - APK Build Instructions
+# FarmLedger Pro - GitHub to APK Guide
 
-Since this is a Progressive Web App (PWA), you can easily convert it into an Android APK file.
+Follow these steps to turn this repository into an Android App (APK).
 
-## Method 1: Using PWABuilder (Easiest)
-1. **Host the app**: Upload this code to a hosting provider (like Vercel, Netlify, or GitHub Pages).
-2. **Visit PWABuilder**: Go to [https://www.pwabuilder.com/](https://www.pwabuilder.com/).
-3. **Enter URL**: Paste your hosted website URL into the box.
-4. **Generate Android Package**: Click "Build My PWA" and then download the **Android (APK)** package.
-5. **Install**: Copy the APK to your phone and install it.
+## 1. Host the app on GitHub Pages
+1. Push this code to your GitHub repository.
+2. Go to **Settings** > **Pages**.
+3. Select the `main` branch and click **Save**.
+4. Note your live URL (e.g., `https://yourname.github.io/repo/`).
 
-## Method 2: Manual Wrapper (Advanced)
-You can use **Capacitor** to turn this React code into a native Android Studio project:
-1. `npm install @capacitor/android`
-2. `npx cap add android`
-3. `npx cap open android` (This opens Android Studio where you can build the APK manually).
+## 2. Generate APK
+1. Go to [PWABuilder.com](https://www.pwabuilder.com/).
+2. Enter your GitHub Pages URL.
+3. Click **Package for Stores** > **Android**.
+4. Download the generated zip file.
 
-## Key Features
-- **Offline First**: Works without internet.
-- **Ripple Balance logic**: Editing a past entry automatically fixes all subsequent balances.
-- **Cloud Sync**: Optional cloud backup to prevent data loss.
+## 3. Install
+1. Extract the zip and find the `app-release.apk` (or similar).
+2. Transfer it to your phone and install.
+
+## Features for Mobile
+- **Standalone Mode**: Opens like a real app without a browser address bar.
+- **Offline Support**: Once opened, the ledger works even in areas with no signal.
+- **Ripple Logic**: Corrects history errors automatically across the whole ledger.
