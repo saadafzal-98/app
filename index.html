@@ -39,17 +39,17 @@
 <body class="bg-gray-50 text-gray-900 selection:bg-blue-100">
     <div id="root"></div>
     <script>
-        // Check if service workers are supported
+        // Use a relative path without dots to ensure standard origin resolution
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // Determine path - works for both root and subfolders (GitHub Pages)
-                const swPath = './sw.js';
-                navigator.serviceWorker.register(swPath)
+                navigator.serviceWorker.register('sw.js')
                     .then(reg => {
-                        console.log('PWA: Service Worker registered successfully', reg.scope);
+                        console.log('PWA: Service Worker registered at scope:', reg.scope);
                     })
                     .catch(err => {
-                        console.error('PWA: Service Worker registration failed', err);
+                        // In sandboxed previews, this may still fail due to cross-origin policies.
+                        // It will work correctly once deployed to your actual domain/GitHub Pages.
+                        console.warn('PWA: Service Worker registration error (likely sandbox restriction):', err.message);
                     });
             });
         }

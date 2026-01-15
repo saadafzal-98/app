@@ -1,26 +1,24 @@
 
-const CACHE_NAME = 'farmledger-v2';
+const CACHE_NAME = 'farmledger-v3';
 const ASSETS_TO_CACHE = [
-  './index.html',
-  './manifest.json',
+  'index.html',
+  'manifest.json',
   'https://cdn.tailwindcss.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
 ];
 
-// Install: Cache files one by one to prevent entire failure if one is missing
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('SW: Pre-caching assets');
-      return Promise.allSettled(
-        ASSETS_TO_CACHE.map(url => cache.add(url))
-      );
+      // Use addAll for the PWA validation but handle it gracefully
+      return cache.addAll(ASSETS_TO_CACHE).catch(err => {
+        console.warn('SW: One or more assets failed to cache during install:', err);
+      });
     })
   );
   self.skipWaiting();
 });
 
-// Activate: Clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -32,28 +30,22 @@ self.addEventListener('activate', (event) => {
   return self.clients.claim();
 });
 
-// Fetch: Network first, fallback to cache
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
   if (event.request.method !== 'GET') return;
-
+  
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // If valid response, clone and cache it
-        if (response && response.status === 200) {
-          const cacheCopy = response.clone();
+    caches.match(event.request).then((cachedResponse) => {
+      const networkFetch = fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const cacheCopy = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, cacheCopy);
           });
         }
-        return response;
-      })
-      .catch(() => {
-        // If network fails, try cache
-        return caches.match(event.request).then((match) => {
-          return match || caches.match('./index.html');
-        });
-      })
+        return networkResponse;
+      }).catch(() => null);
+
+      return cachedResponse || networkFetch;
+    })
   );
 });

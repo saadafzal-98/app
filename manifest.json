@@ -1,11 +1,12 @@
 
 {
-  "id": "com.farmledger.pro",
+  "id": "com.farmledger.pro.v1",
   "name": "FarmLedger Pro",
   "short_name": "FarmLedger",
-  "description": "Professional customer ledger and supply tracking for farm businesses. Features offline support and automatic balance calculations.",
+  "description": "A professional-grade mobile customer ledger and supply tracking application for farm businesses. Works offline with automatic data persistence and balance calculations.",
   "lang": "en-US",
-  "start_url": "./index.html",
+  "start_url": "index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1d4ed8",
@@ -37,26 +38,26 @@
       "sizes": "1000x2000",
       "type": "image/jpeg",
       "form_factor": "narrow",
-      "label": "Daily Supply Entry Screen"
+      "label": "Mobile Supply Entry"
     },
     {
       "src": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1000&q=80",
       "sizes": "1000x600",
       "type": "image/jpeg",
       "form_factor": "wide",
-      "label": "Business Dashboard Overview"
+      "label": "Dashboard Statistics"
     }
   ],
   "shortcuts": [
     {
       "name": "Add Daily Record",
-      "url": "./index.html",
-      "description": "Quickly record daily supply and payments"
+      "url": "index.html",
+      "description": "Record today's supply and payments"
     },
     {
-      "name": "Customer List",
-      "url": "./index.html",
-      "description": "Manage your customer directory"
+      "name": "View Customers",
+      "url": "index.html",
+      "description": "Open customer directory"
     }
   ]
 }
