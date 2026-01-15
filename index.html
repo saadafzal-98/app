@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,7 +19,6 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         html, body { overscroll-behavior-y: contain; height: 100%; }
-        /* Smooth transitions for mobile feel */
         .page-transition { animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -40,11 +38,17 @@
 <body class="bg-gray-50 text-gray-900 selection:bg-blue-100">
     <div id="root"></div>
     <script>
+        // Use a strictly relative path without the leading dot to resolve origin issues in sandboxed environments
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Service Worker registered', reg))
-                    .catch(err => console.log('Service Worker registration failed', err));
+                navigator.serviceWorker.register('sw.js', { scope: './' })
+                    .then(reg => {
+                        console.log('PWA: Service Worker registered', reg.scope);
+                    })
+                    .catch(err => {
+                        // Log specifically for debugging but don't crash
+                        console.warn('PWA: Service Worker registration failed:', err.message);
+                    });
             });
         }
     </script>

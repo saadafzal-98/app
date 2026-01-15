@@ -1,11 +1,10 @@
-
 {
-  "id": "com.farmledger.pro",
+  "id": "com.farmledger.pro.v2",
   "name": "FarmLedger Pro",
   "short_name": "FarmLedger",
   "description": "Professional customer ledger and supply tracking for farm businesses. Features offline support, detailed reporting, and automatic balance calculations.",
   "lang": "en-US",
-  "start_url": "./index.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1d4ed8",
@@ -13,6 +12,12 @@
   "scope": "./",
   "categories": ["business", "finance", "productivity"],
   "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2371/2371970.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2371/2371970.png",
       "sizes": "512x512",
@@ -24,23 +29,13 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    },
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/2371/2371970.png",
-      "sizes": "192x192",
-      "type": "image/png"
     }
   ],
   "shortcuts": [
     {
       "name": "Add Daily Supply",
-      "url": "./index.html",
+      "url": "index.html",
       "description": "Quickly record daily supply and payments"
-    },
-    {
-      "name": "Customer Directory",
-      "url": "./index.html",
-      "description": "Manage your customer list"
     }
   ],
   "screenshots": [

@@ -1,5 +1,4 @@
-
-const CACHE_NAME = 'farmledger-pro-v1';
+const CACHE_NAME = 'farmledger-pro-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -12,7 +11,10 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+      // Use promise.allSettled to ensure installation completes even if one non-critical asset fails
+      return Promise.allSettled(
+        ASSETS_TO_CACHE.map(url => cache.add(url))
+      );
     })
   );
   self.skipWaiting();
@@ -34,15 +36,15 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch event: network first, fallback to cache
+// Fetch event: Network first, fallback to cache for better data accuracy
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // If successful, clone and store in cache
-        if (response && response.status === 200) {
+        // Only cache valid successful responses
+        if (response && response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
@@ -51,7 +53,7 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // If network fails, look in cache
+        // Offline fallback
         return caches.match(event.request);
       })
   );
