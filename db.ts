@@ -6,6 +6,9 @@ import { Customer, Transaction, AppSettings } from './types';
 export interface ExtendedSettings extends AppSettings {
   cloudSyncUrl?: string;
   autoSync?: boolean;
+  passcode?: string;
+  isLockActive?: boolean;
+  biometricEnabled?: boolean;
 }
 
 export class FarmLedgerDB extends Dexie {
@@ -15,7 +18,6 @@ export class FarmLedgerDB extends Dexie {
 
   constructor() {
     super('FarmLedgerDB');
-    // Fix: Use version(1).stores() on this, explicitly casting to any if standard inheritance isn't recognized
     (this as any).version(1).stores({
       customers: '++id, &phone, name',
       transactions: '++id, customerId, date, type',
@@ -23,7 +25,6 @@ export class FarmLedgerDB extends Dexie {
     });
   }
 
-  // Helper for full data export
   async getFullExport() {
     const customers = await this.customers.toArray();
     const transactions = await this.transactions.toArray();
@@ -42,6 +43,13 @@ export const db = new FarmLedgerDB();
 export async function initSettings() {
   const existing = await db.settings.get('global');
   if (!existing) {
-    await db.settings.add({ id: 'global', farmRate: 150, autoSync: false });
+    await db.settings.add({ 
+      id: 'global', 
+      farmRate: 150, 
+      autoSync: false,
+      isLockActive: false,
+      biometricEnabled: false,
+      passcode: ''
+    });
   }
 }

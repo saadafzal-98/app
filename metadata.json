@@ -1,5 +1,5 @@
 {
-  "name": "FarmLedger Pro",
-  "description": "A comprehensive mobile-first customer ledger and supply tracking application for farm supply businesses, featuring offline support, detailed reporting, and transaction history.",
+  "name": "Ledger",
+  "description": "Professional mobile-first customer ledger and supply tracking application.",
   "requestFramePermissions": []
 }

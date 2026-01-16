@@ -1,36 +1,33 @@
-# FarmLedger Pro - User Manual & Developer Guide
 
-FarmLedger Pro is a professional, mobile-first customer ledger and supply tracking application designed for farm businesses.
+# FarmLedger Pro - Android Build Guide
 
-## 🚀 How to Create an APK
+## 🚀 First-Time Setup
+Run these once to prepare your environment:
 
-### Method 1: Capacitor (Recommended for Cursor Users)
-1. **Prerequisites**: Install [Node.js](https://nodejs.org/) and [Android Studio](https://developer.android.com/studio).
-2. **Setup**:
-   ```bash
-   npm install @capacitor/core @capacitor/cli @capacitor/android
-   npx cap init
-   npx cap add android
+1. **Install Dependencies**:
+   ```powershell
+   npm install
    ```
-3. **Build**:
-   ```bash
-   npx cap copy
-   npx cap open android
+
+2. **Add Android Platform**:
+   ```powershell
+   npm run cap:init
    ```
-4. **Generate APK**: In Android Studio, click **Build > Build APK(s)**.
 
-### Method 2: PWABuilder (Fastest)
-1. Deploy your site to a URL (e.g., `https://my-farm-ledger.vercel.app`).
-2. Visit [PWABuilder.com](https://www.pwabuilder.com).
-3. Generate the Android "Digital Asset Link" and download your APK.
+## 🔄 Daily Build Workflow
+Run these whenever you make changes to the code and want to see them in the App:
 
-## 📋 Key Features
-- **Offline-First**: Works without internet using IndexedDB.
-- **Daily Record Sheet**: Bulk entry for all customers with "Ledger Ripple" correction logic.
-- **Reports**: CSV Export and Cloud Sync capabilities.
+1. **Build & Sync**:
+   ```powershell
+   npm run cap:sync
+   ```
 
-## 🛠 Tech Stack
-- **Framework**: React 19 (ESM via esm.sh)
-- **Database**: Dexie.js (IndexedDB wrapper)
-- **Styling**: Tailwind CSS
-- **PWA**: Custom Service Worker (`sw.js`) and Manifest.
+2. **Open Android Studio**:
+   ```powershell
+   npm run cap:open
+   ```
+
+3. **In Android Studio**:
+   - Wait for "Gradle Sync" to finish (bottom bar).
+   - Click the **Play button** (Run 'app') to launch on your phone/emulator.
+   - Or go to **Build > Build APK(s)** to get the installable file.

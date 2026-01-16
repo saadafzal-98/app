@@ -5,7 +5,10 @@ import {
   Users, 
   BarChart3, 
   Settings as SettingsIcon,
-  ClipboardList
+  ClipboardList,
+  Plus,
+  Lock,
+  Delete
 } from 'lucide-react';
 import { db, initSettings } from './db';
 import Dashboard from './views/Dashboard';
@@ -17,14 +20,107 @@ import CustomerDetail from './views/CustomerDetail';
 
 type View = 'dashboard' | 'customers' | 'daily-record' | 'reports' | 'settings' | 'customer-detail';
 
+const LockScreen: React.FC<{ onUnlock: () => void, correctPin: string }> = ({ onUnlock, correctPin }) => {
+  const [pin, setPin] = useState('');
+  const [error, setError] = useState(false);
+
+  const handlePress = (num: string) => {
+    if (pin.length < 4) {
+      const newPin = pin + num;
+      setPin(newPin);
+      if (newPin.length === 4) {
+        if (newPin === correctPin) {
+          onUnlock();
+        } else {
+          setError(true);
+          setTimeout(() => {
+            setPin('');
+            setError(false);
+          }, 500);
+        }
+      }
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-slate-900 flex flex-col items-center justify-center p-6 page-transition">
+      <div className="mb-12 flex flex-col items-center">
+        <div className={`w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center text-white mb-4 shadow-xl ${error ? 'animate-bounce' : ''}`}>
+          <Lock size={32} />
+        </div>
+        <h1 className="text-2xl font-black text-white tracking-tight">Ledger Secure</h1>
+        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-1">Enter your security PIN</p>
+      </div>
+
+      <div className="flex space-x-4 mb-12">
+        {[0, 1, 2, 3].map((i) => (
+          <div 
+            key={i} 
+            className={`w-4 h-4 rounded-full border-2 transition-all duration-200 ${
+              pin.length > i 
+                ? 'bg-emerald-500 border-emerald-500 scale-125' 
+                : 'border-slate-700'
+            } ${error ? 'border-rose-500 bg-rose-500' : ''}`}
+          />
+        ))}
+      </div>
+
+      <div className="grid grid-cols-3 gap-6 max-w-xs w-full">
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+          <button 
+            key={num} 
+            onClick={() => handlePress(num.toString())}
+            className="w-20 h-20 rounded-full bg-slate-800 text-white text-2xl font-black hover:bg-slate-700 active:scale-90 transition-all border border-slate-700/50"
+          >
+            {num}
+          </button>
+        ))}
+        <div />
+        <button 
+          onClick={() => handlePress('0')}
+          className="w-20 h-20 rounded-full bg-slate-800 text-white text-2xl font-black hover:bg-slate-700 active:scale-90 transition-all border border-slate-700/50"
+        >
+          0
+        </button>
+        <button 
+          onClick={() => setPin(pin.slice(0, -1))}
+          className="w-20 h-20 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center hover:text-white transition-colors"
+        >
+          <Delete size={24} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   const [activeView, setActiveView] = useState<View>('dashboard');
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const [correctPin, setCorrectPin] = useState('');
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
 
   useEffect(() => {
-    initSettings().then(() => setIsInitialized(true));
+    initSettings().then(async () => {
+      const settings = await db.settings.get('global');
+      if (settings?.isLockActive && settings.passcode) {
+        setCorrectPin(settings.passcode);
+        setIsLocked(true);
+      }
+      setIsInitialized(true);
+    });
   }, []);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
 
   const navigateToCustomerDetail = (id: number) => {
     setSelectedCustomerId(id);
@@ -37,7 +133,11 @@ const App: React.FC = () => {
       case 'customers': return <Customers onCustomerSelect={navigateToCustomerDetail} />;
       case 'daily-record': return <DailyRecord onSuccess={() => setActiveView('dashboard')} />;
       case 'reports': return <Reports />;
-      case 'settings': return <Settings />;
+      case 'settings': return <Settings darkMode={darkMode} setDarkMode={setDarkMode} onSecurityUpdate={() => {
+        db.settings.get('global').then(s => {
+          if (s) setCorrectPin(s.passcode || '');
+        });
+      }} />;
       case 'customer-detail': 
         return selectedCustomerId ? (
           <CustomerDetail 
@@ -49,79 +149,64 @@ const App: React.FC = () => {
     }
   };
 
-  if (!isInitialized) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-blue-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  if (!isInitialized) return null;
+  if (isLocked) return <LockScreen correctPin={correctPin} onUnlock={() => setIsLocked(false)} />;
 
   return (
-    <div className="min-h-screen flex flex-col pb-20 md:pb-0 md:pl-64">
-      {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 fixed inset-y-0 left-0 z-50">
-        <div className="p-6">
-          <h1 className="text-2xl font-bold text-blue-700">FarmLedger</h1>
-          <p className="text-xs text-gray-400">Pro Edition</p>
+    <div className="min-h-screen flex flex-col pb-24 md:pb-0 md:pl-64 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors">
+      <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 fixed inset-y-0 left-0 z-50">
+        <div className="p-8">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center text-white font-bold">L</div>
+            <div>
+              <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">Ledger</h1>
+              <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Premium</p>
+            </div>
+          </div>
         </div>
-        <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
-          <NavItem active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={<LayoutDashboard size={20}/>} label="Dashboard" />
-          <NavItem active={activeView === 'daily-record'} onClick={() => setActiveView('daily-record')} icon={<ClipboardList size={20}/>} label="Daily Record" />
+        <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
+          <NavItem active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={<LayoutDashboard size={20}/>} label="Overview" />
+          <NavItem active={activeView === 'daily-record'} onClick={() => setActiveView('daily-record')} icon={<ClipboardList size={20}/>} label="Daily Sheet" />
           <NavItem active={activeView === 'customers'} onClick={() => setActiveView('customers')} icon={<Users size={20}/>} label="Customers" />
-          <NavItem active={activeView === 'reports'} onClick={() => setActiveView('reports')} icon={<BarChart3 size={20}/>} label="Reports" />
-          <NavItem active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<SettingsIcon size={20}/>} label="Settings" />
+          <NavItem active={activeView === 'reports'} onClick={() => setActiveView('reports')} icon={<BarChart3 size={20}/>} label="Analytics" />
+          <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-700">
+            <NavItem active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<SettingsIcon size={20}/>} label="Settings" />
+          </div>
         </nav>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 p-4 md:p-8 max-w-6xl mx-auto w-full">
+      <main className="flex-1 p-4 md:p-10 max-w-7xl mx-auto w-full">
+        <div className="md:hidden flex justify-between items-center mb-6 px-2">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center text-white font-bold">L</div>
+            <h1 className="text-2xl font-black tracking-tight dark:text-white">Ledger</h1>
+          </div>
+        </div>
         {renderView()}
       </main>
 
-      {/* FAB (Floating Action Button) for common mobile tasks */}
-      {['dashboard', 'customers'].includes(activeView) && (
-        <button 
-          onClick={() => setActiveView('daily-record')}
-          className="fixed bottom-24 right-6 md:hidden w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-colors z-40"
-        >
-          <ClipboardList size={28} />
-        </button>
-      )}
-
-      {/* Bottom Nav - Mobile */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-16 px-2 z-50">
-        <MobileNavItem active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={<LayoutDashboard size={20}/>} label="Home" />
-        <MobileNavItem active={activeView === 'daily-record'} onClick={() => setActiveView('daily-record')} icon={<ClipboardList size={20}/>} label="Record" />
-        <MobileNavItem active={activeView === 'customers'} onClick={() => setActiveView('customers')} icon={<Users size={20}/>} label="Users" />
-        <MobileNavItem active={activeView === 'reports'} onClick={() => setActiveView('reports')} icon={<BarChart3 size={20}/>} label="Stats" />
-        <MobileNavItem active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<SettingsIcon size={20}/>} label="Config" />
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 glass-card border-t border-slate-200 dark:border-slate-800 flex justify-around items-center h-20 px-4 z-50 rounded-t-3xl shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.05)]">
+        <MobileNavItem active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={<LayoutDashboard size={22}/>} label="Home" />
+        <MobileNavItem active={activeView === 'daily-record'} onClick={() => setActiveView('daily-record')} icon={<ClipboardList size={22}/>} label="Sheet" />
+        <MobileNavItem active={activeView === 'customers'} onClick={() => setActiveView('customers')} icon={<Users size={22}/>} label="Users" />
+        <MobileNavItem active={activeView === 'reports'} onClick={() => setActiveView('reports')} icon={<BarChart3 size={22}/>} label="Stats" />
+        <MobileNavItem active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<SettingsIcon size={22}/>} label="Menu" />
       </nav>
     </div>
   );
 };
 
 const NavItem = ({ active, onClick, icon, label }: any) => (
-  <button
-    onClick={onClick}
-    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-colors ${
-      active ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'
-    }`}
-  >
-    {icon}
-    <span>{label}</span>
+  <button onClick={onClick} className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl font-bold transition-all duration-200 ${active ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 shadow-sm' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-100'}`}>
+    <span className={active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}>{icon}</span>
+    <span className="text-sm tracking-tight">{label}</span>
   </button>
 );
 
 const MobileNavItem = ({ active, onClick, icon, label }: any) => (
-  <button
-    onClick={onClick}
-    className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
-      active ? 'text-blue-600' : 'text-gray-400'
-    }`}
-  >
-    {icon}
-    <span className="text-[10px] uppercase font-bold tracking-wider">{label}</span>
+  <button onClick={onClick} className={`flex flex-col items-center justify-center w-full h-full space-y-1.5 transition-all duration-300 ${active ? 'text-emerald-600 dark:text-emerald-400 scale-110' : 'text-slate-400 dark:text-slate-500 opacity-60'}`}>
+    <div className={`p-1 ${active ? 'tab-active' : ''}`}>{icon}</div>
+    <span className="text-[9px] font-extrabold uppercase tracking-[0.1em]">{label}</span>
   </button>
 );
 
