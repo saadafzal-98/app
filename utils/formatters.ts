@@ -21,6 +21,12 @@ export const formatInputDate = (date: Date): string => {
   return date.toISOString().split('T')[0];
 };
 
+export const getStartOfDay = (dateStr: string): Date => {
+  const d = new Date(dateStr);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
 export const validatePhone = (phone: string): boolean => {
   // Format: 03XX-XXXXXXX or 03XXXXXXXXX (11 digits total)
   const regex = /^03\d{9}$/;
