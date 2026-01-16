@@ -45,32 +45,32 @@ const LockScreen: React.FC<{ onUnlock: () => void, correctPin: string }> = ({ on
   return (
     <div className="fixed inset-0 z-[100] bg-slate-900 flex flex-col items-center justify-center p-6 page-transition">
       <div className="mb-12 flex flex-col items-center">
-        <div className={`w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center text-white mb-4 shadow-xl ${error ? 'animate-bounce' : ''}`}>
-          <Lock size={32} />
+        <div className={`w-20 h-20 gradient-primary rounded-[2rem] flex items-center justify-center text-white mb-6 shadow-2xl ${error ? 'animate-shake' : ''}`}>
+          <Lock size={36} />
         </div>
-        <h1 className="text-2xl font-black text-white tracking-tight">Ledger Secure</h1>
-        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-1">Enter your security PIN</p>
+        <h1 className="text-3xl font-black text-white tracking-tight">Ledger Secure</h1>
+        <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px] mt-2">Authentication Required</p>
       </div>
 
-      <div className="flex space-x-4 mb-12">
+      <div className="flex space-x-5 mb-16">
         {[0, 1, 2, 3].map((i) => (
           <div 
             key={i} 
-            className={`w-4 h-4 rounded-full border-2 transition-all duration-200 ${
+            className={`w-4 h-4 rounded-full border-2 transition-all duration-300 ${
               pin.length > i 
-                ? 'bg-emerald-500 border-emerald-500 scale-125' 
+                ? 'bg-emerald-500 border-emerald-500 scale-125 shadow-[0_0_15px_rgba(16,185,129,0.5)]' 
                 : 'border-slate-700'
-            } ${error ? 'border-rose-500 bg-rose-500' : ''}`}
+            } ${error ? 'border-rose-500 bg-rose-500 animate-pulse' : ''}`}
           />
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-6 max-w-xs w-full">
+      <div className="grid grid-cols-3 gap-6 max-w-xs w-full px-4">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
           <button 
             key={num} 
             onClick={() => handlePress(num.toString())}
-            className="w-20 h-20 rounded-full bg-slate-800 text-white text-2xl font-black hover:bg-slate-700 active:scale-90 transition-all border border-slate-700/50"
+            className="w-20 h-20 rounded-full bg-slate-800/50 text-white text-3xl font-bold hover:bg-slate-700 active:scale-90 transition-all border border-slate-700/30 flex items-center justify-center"
           >
             {num}
           </button>
@@ -78,17 +78,26 @@ const LockScreen: React.FC<{ onUnlock: () => void, correctPin: string }> = ({ on
         <div />
         <button 
           onClick={() => handlePress('0')}
-          className="w-20 h-20 rounded-full bg-slate-800 text-white text-2xl font-black hover:bg-slate-700 active:scale-90 transition-all border border-slate-700/50"
+          className="w-20 h-20 rounded-full bg-slate-800/50 text-white text-3xl font-bold hover:bg-slate-700 active:scale-90 transition-all border border-slate-700/30 flex items-center justify-center"
         >
           0
         </button>
         <button 
           onClick={() => setPin(pin.slice(0, -1))}
-          className="w-20 h-20 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center hover:text-white transition-colors"
+          className="w-20 h-20 rounded-full bg-slate-800/20 text-slate-500 flex items-center justify-center hover:text-white transition-colors active:scale-90"
         >
-          <Delete size={24} />
+          <Delete size={28} />
         </button>
       </div>
+      
+      <style>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-8px); }
+          75% { transform: translateX(8px); }
+        }
+        .animate-shake { animation: shake 0.2s ease-in-out 0s 2; }
+      `}</style>
     </div>
   );
 };
@@ -168,7 +177,7 @@ const App: React.FC = () => {
           <NavItem active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={<LayoutDashboard size={20}/>} label="Overview" />
           <NavItem active={activeView === 'daily-record'} onClick={() => setActiveView('daily-record')} icon={<ClipboardList size={20}/>} label="Daily Sheet" />
           <NavItem active={activeView === 'customers'} onClick={() => setActiveView('customers')} icon={<Users size={20}/>} label="Customers" />
-          <NavItem active={activeView === 'reports'} onClick={() => setActiveView('reports')} icon={<BarChart3 size={20}/>} label="Analytics" />
+          <NavItem active={activeView === 'reports'} onClick={() => setActiveView('reports'} icon={<BarChart3 size={20}/>} label="Analytics" />
           <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-700">
             <NavItem active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<SettingsIcon size={20}/>} label="Settings" />
           </div>
@@ -189,7 +198,7 @@ const App: React.FC = () => {
         <MobileNavItem active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={<LayoutDashboard size={22}/>} label="Home" />
         <MobileNavItem active={activeView === 'daily-record'} onClick={() => setActiveView('daily-record')} icon={<ClipboardList size={22}/>} label="Sheet" />
         <MobileNavItem active={activeView === 'customers'} onClick={() => setActiveView('customers')} icon={<Users size={22}/>} label="Users" />
-        <MobileNavItem active={activeView === 'reports'} onClick={() => setActiveView('reports')} icon={<BarChart3 size={22}/>} label="Stats" />
+        <MobileNavItem active={activeView === 'reports'} onClick={() => setActiveView('reports'} icon={<BarChart3 size={22}/>} label="Stats" />
         <MobileNavItem active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<SettingsIcon size={22}/>} label="Menu" />
       </nav>
     </div>

@@ -9,6 +9,7 @@ export interface ExtendedSettings extends AppSettings {
   passcode?: string;
   isLockActive?: boolean;
   biometricEnabled?: boolean;
+  lastSyncTimestamp?: string;
 }
 
 export class FarmLedgerDB extends Dexie {
@@ -49,7 +50,8 @@ export async function initSettings() {
       autoSync: false,
       isLockActive: false,
       biometricEnabled: false,
-      passcode: ''
+      passcode: '',
+      lastSyncTimestamp: 'Never'
     });
   }
 }
