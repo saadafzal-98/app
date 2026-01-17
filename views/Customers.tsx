@@ -20,8 +20,8 @@ const Customers: React.FC<CustomersProps> = ({ onCustomerSelect }) => {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
-    supplyRate: 0, // Hardcoded default
-    openingBalance: 0
+    supplyRate: null, // Hardcoded default
+    openingBalance: null
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
