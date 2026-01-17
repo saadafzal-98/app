@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../db';
 import { Customer } from '../types';
 import { formatPKR, validatePhone } from '../utils/formatters';
-import { Search, UserPlus, Phone, Edit2, ChevronRight, X, User, Loader2 } from 'lucide-react';
+import { Search, UserPlus, Phone, Edit2, ChevronRight, X, User } from 'lucide-react';
 
 interface CustomersProps {
   onCustomerSelect: (id: number) => void;
@@ -16,12 +16,12 @@ const Customers: React.FC<CustomersProps> = ({ onCustomerSelect }) => {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Use strings for input values to prevent leading zero "041" issues
+  // Form state
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
-    supplyRate: '', 
-    openingBalance: ''
+    supplyRate: 0, 
+    openingBalance: 0
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -35,30 +35,17 @@ const Customers: React.FC<CustomersProps> = ({ onCustomerSelect }) => {
     setLoading(false);
   };
 
-  const handleOpenAdd = async () => {
-    const settings = await db.settings.get('global');
-    setFormData({
-      name: '',
-      phone: '',
-      supplyRate: (settings?.defaultSupplyRate ?? 10).toString(),
-      openingBalance: '0'
-    });
-    setErrors({});
-    setShowModal('add');
-  };
-
   const validate = async (isEdit: boolean) => {
     const newErrors: Record<string, string> = {};
     if (formData.name.trim().length < 2) newErrors.name = "Name must be 2-50 characters";
-    if (!validatePhone(formData.phone)) newErrors.phone = "Invalid format: 03XXXXXXXXX";
+    if (!validatePhone(formData.phone)) newErrors.phone = "Invalid format: 03XXXXXXXXX (11 digits)";
     
-    const existing = await db.customers.where('phone').equals(formData.phone.trim()).first();
+    const existing = await db.customers.where('phone').equals(formData.phone).first();
     if (existing && (!isEdit || existing.id !== editingCustomer?.id)) {
       newErrors.phone = "Phone number already exists";
     }
 
-    const rate = parseFloat(formData.supplyRate) || 0;
-    if (rate < 0) newErrors.supplyRate = "Cannot be negative";
+    if (formData.supplyRate < 0 || formData.supplyRate > 999) newErrors.supplyRate = "Rate must be 0-999";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -72,17 +59,15 @@ const Customers: React.FC<CustomersProps> = ({ onCustomerSelect }) => {
         await db.customers.update(editingCustomer.id, {
           name: formData.name.trim(),
           phone: formData.phone.trim(),
-          supplyRate: parseFloat(formData.supplyRate) || 0,
+          supplyRate: Number(formData.supplyRate),
         });
       } else {
-        const rate = parseFloat(formData.supplyRate) || 0;
-        const balance = parseFloat(formData.openingBalance) || 0;
         const newCustomer: Customer = {
           name: formData.name.trim(),
           phone: formData.phone.trim(),
-          supplyRate: rate,
-          openingBalance: balance,
-          currentBalance: balance,
+          supplyRate: Number(formData.supplyRate),
+          openingBalance: Number(formData.openingBalance),
+          currentBalance: Number(formData.openingBalance),
           totalSupplied: 0,
           totalPaid: 0,
           createdAt: new Date()
@@ -91,6 +76,7 @@ const Customers: React.FC<CustomersProps> = ({ onCustomerSelect }) => {
       }
       setShowModal(null);
       setEditingCustomer(null);
+      setFormData({ name: '', phone: '', supplyRate: 0, openingBalance: 0 });
       loadCustomers();
     }
   };
@@ -101,19 +87,10 @@ const Customers: React.FC<CustomersProps> = ({ onCustomerSelect }) => {
     setFormData({
       name: customer.name,
       phone: customer.phone,
-      supplyRate: customer.supplyRate.toString(),
-      openingBalance: customer.openingBalance.toString()
+      supplyRate: customer.supplyRate,
+      openingBalance: customer.openingBalance
     });
-    setErrors({});
     setShowModal('edit');
-  };
-
-  const handleNumericInput = (field: 'supplyRate' | 'openingBalance', value: string) => {
-    // Sanitize: allow only numbers and one decimal point
-    const sanitized = value.replace(/[^0-9.]/g, '');
-    // Remove leading zeros but keep 0 if it's the only character
-    const noLeadingZeros = sanitized.replace(/^0+(?=\d)/, '');
-    setFormData({ ...formData, [field]: noLeadingZeros });
   };
 
   const filteredCustomers = customers.filter(c => 
@@ -122,155 +99,150 @@ const Customers: React.FC<CustomersProps> = ({ onCustomerSelect }) => {
   );
 
   return (
-    <div className="space-y-6 page-transition">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Entity Directory</h1>
-          <p className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-1">{customers.length} Registered Routes</p>
+          <h1 className="text-2xl font-bold text-gray-800">Customers</h1>
+          <p className="text-gray-500">{customers.length} total profiles</p>
         </div>
         <button 
-          onClick={handleOpenAdd}
-          className="flex items-center justify-center space-x-2 bg-emerald-600 text-white px-6 py-3 rounded-2xl hover:scale-105 active:scale-95 transition-all font-bold shadow-lg"
+          onClick={() => {
+            setFormData({ name: '', phone: '', supplyRate: 0, openingBalance: 0 });
+            setShowModal('add');
+          }}
+          className="flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-medium"
         >
           <UserPlus size={18} />
-          <span className="uppercase tracking-widest text-xs">New Customer</span>
+          <span>New Customer</span>
         </button>
       </div>
 
-      <div className="relative group">
-        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-500 transition-colors">
-          <Search size={20} />
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+          <Search size={18} />
         </div>
         <input
           type="text"
-          placeholder="Filter by name or phone identifier..."
-          className="block w-full pl-12 pr-4 py-4 border border-slate-200 dark:border-slate-700 rounded-[1.5rem] bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+          placeholder="Search name or phone..."
+          className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredCustomers.map(customer => (
           <div 
             key={customer.id}
             onClick={() => customer.id && onCustomerSelect(customer.id)}
-            className="bg-white dark:bg-slate-800 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-xl hover:border-emerald-200 dark:hover:border-emerald-900/50 transition-all cursor-pointer group relative overflow-hidden"
+            className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer group relative overflow-hidden"
           >
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center space-x-3">
-                 <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center font-black text-slate-400 group-hover:text-emerald-500 transition-colors">
-                    {customer.name.charAt(0)}
-                 </div>
-                 <div>
-                    <h3 className="font-black text-slate-900 dark:text-white tracking-tight leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">{customer.name}</h3>
-                    <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 flex items-center mt-1 uppercase tracking-wider">
-                      <Phone size={12} className="mr-1.5" /> {customer.phone}
-                    </p>
-                 </div>
+            <div className="flex justify-between items-start mb-3">
+              <div>
+                <h3 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{customer.name}</h3>
+                <p className="text-sm text-gray-500 flex items-center mt-1">
+                  <Phone size={14} className="mr-1.5" /> {customer.phone}
+                </p>
               </div>
               <button 
                 onClick={(e) => openEdit(customer, e)}
-                className="p-2 text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-xl transition-all"
+                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
               >
-                <Edit2 size={18} />
+                <Edit2 size={16} />
               </button>
             </div>
-            
-            <div className="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-slate-700">
-               <div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Supply Margin</p>
-                  <p className="text-xs font-black text-slate-900 dark:text-slate-300">+ Rs {customer.supplyRate}</p>
-               </div>
-               <div className="text-right">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Net Standing</p>
-                  <p className={`font-black text-sm ${customer.currentBalance > 0 ? 'text-rose-600' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                    {formatPKR(customer.currentBalance)}
-                  </p>
-               </div>
+            <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+              <span className="text-xs text-gray-400 uppercase font-medium">Balance</span>
+              <span className={`font-bold ${customer.currentBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                {formatPKR(customer.currentBalance)}
+              </span>
             </div>
           </div>
         ))}
       </div>
 
+      {filteredCustomers.length === 0 && !loading && (
+        <div className="text-center py-12">
+          <p className="text-gray-400">No customers found</p>
+        </div>
+      )}
+
+      {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
-          <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] w-full max-w-md overflow-hidden animate-in zoom-in duration-300 shadow-2xl border border-white/10">
-            <div className="px-8 py-6 border-b border-slate-50 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
-              <div>
-                <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center tracking-tight">
-                  {showModal === 'edit' ? <Edit2 size={22} className="mr-3 text-emerald-600"/> : <UserPlus size={22} className="mr-3 text-emerald-600"/>}
-                  {showModal === 'edit' ? 'Update Profile' : 'Entity Entry'}
-                </h2>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                   {showModal === 'edit' ? 'Modifying existing records' : 'New ledger initialization'}
-                </p>
-              </div>
-              <button onClick={() => setShowModal(null)} className="p-2 text-slate-400 hover:text-rose-500 transition-colors">
-                <X size={24} />
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 shadow-2xl">
+            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h2 className="text-lg font-bold flex items-center">
+                {showModal === 'edit' ? <Edit2 size={18} className="mr-2 text-blue-600"/> : <UserPlus size={18} className="mr-2 text-blue-600"/>}
+                {showModal === 'edit' ? 'Edit Customer' : 'Register Customer'}
+              </h2>
+              <button onClick={() => setShowModal(null)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-8 space-y-6">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Customer Identity</label>
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
                 <input
                   required
                   type="text"
-                  className={`w-full p-4 bg-slate-50 dark:bg-slate-900 border-2 rounded-2xl outline-none font-bold text-sm dark:text-white focus:border-emerald-500 transition-all ${errors.name ? 'border-rose-500' : 'border-slate-100 dark:border-slate-800'}`}
+                  className={`w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${errors.name ? 'border-red-500' : 'border-gray-200'}`}
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  placeholder="Full Legal Name"
+                  placeholder="e.g. John Doe"
                 />
-                {errors.name && <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest px-1">{errors.name}</p>}
+                {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
               </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Primary Phone</label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number (11 Digits) *</label>
                 <input
                   required
                   type="tel"
-                  className={`w-full p-4 bg-slate-50 dark:bg-slate-900 border-2 rounded-2xl outline-none font-bold text-sm dark:text-white focus:border-emerald-500 transition-all ${errors.phone ? 'border-rose-500' : 'border-slate-100 dark:border-slate-800'}`}
+                  className={`w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${errors.phone ? 'border-red-500' : 'border-gray-200'}`}
                   value={formData.phone}
                   onChange={(e) => setFormData({...formData, phone: e.target.value})}
                   placeholder="03XXXXXXXXX"
                 />
-                {errors.phone && <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest px-1">{errors.phone}</p>}
+                {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
               </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Supply Add-on</label>
-                  <div className="relative">
-                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500 font-bold">+</span>
-                     <input
-                        required
-                        type="text"
-                        inputMode="decimal"
-                        className="w-full pl-8 pr-4 py-4 bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-2xl outline-none font-black text-sm dark:text-white focus:border-emerald-500 transition-all"
-                        value={formData.supplyRate}
-                        onChange={(e) => handleNumericInput('supplyRate', e.target.value)}
-                      />
-                  </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Supply Rate (PKR) *</label>
+                  <input
+                    required
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    className={`w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors.supplyRate ? 'border-red-500' : 'border-gray-200'}`}
+                    value={formData.supplyRate === 0 ? '' : formData.supplyRate}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setFormData({...formData, supplyRate: isNaN(val) || val < 0 ? 0 : val});
+                    }}
+                  />
+                  {errors.supplyRate && <p className="text-xs text-red-500 mt-1">{errors.supplyRate}</p>}
                 </div>
                 {showModal === 'add' && (
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Opening Bal</label>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Opening Bal (PKR)</label>
                     <input
-                      type="text"
-                      inputMode="decimal"
-                      className="w-full p-4 bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-2xl outline-none font-black text-sm dark:text-white focus:border-emerald-500 transition-all"
-                      value={formData.openingBalance}
-                      onChange={(e) => handleNumericInput('openingBalance', e.target.value)}
+                      type="number"
+                      className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      value={formData.openingBalance === 0 ? '' : formData.openingBalance}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        setFormData({...formData, openingBalance: isNaN(val) ? 0 : val});
+                      }}
                     />
                   </div>
                 )}
               </div>
-
               <button 
                 type="submit"
-                className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-5 rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all mt-4"
+                className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors mt-4 shadow-md active:scale-[0.98]"
               >
-                {showModal === 'edit' ? 'Update Ledger' : 'Confirm Registration'}
+                {showModal === 'edit' ? 'Update Details' : 'Register Customer'}
               </button>
             </form>
           </div>

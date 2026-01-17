@@ -44,11 +44,9 @@ export const db = new FarmLedgerDB();
 export async function initSettings() {
   const existing = await db.settings.get('global');
   if (!existing) {
-    // Fix: initialize defaultSupplyRate with a default value of 10
     await db.settings.add({ 
       id: 'global', 
       farmRate: 150, 
-      defaultSupplyRate: 10,
       autoSync: false,
       isLockActive: false,
       biometricEnabled: false,

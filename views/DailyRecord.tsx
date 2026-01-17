@@ -246,9 +246,14 @@ const DailyRecord: React.FC<DailyRecordProps> = ({ onSuccess }) => {
                  <span className="text-emerald-600 dark:text-emerald-400 text-[10px] font-black">Rs</span>
                  <input 
                    type="number" 
-                   className="bg-transparent text-sm font-black outline-none w-14 text-slate-900 dark:text-white"
-                   value={farmRate}
-                   onChange={(e) => setFarmRate(parseFloat(e.target.value) || 0)}
+                   min="0"
+                   placeholder="Rate"
+                   className="bg-transparent text-sm font-black outline-none w-16 text-slate-900 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                   value={farmRate === 0 ? '' : farmRate}
+                   onChange={(e) => {
+                     const val = parseFloat(e.target.value);
+                     setFarmRate(isNaN(val) || val < 0 ? 0 : val);
+                   }}
                  />
               </div>
            </div>

@@ -37,10 +37,8 @@ export interface Transaction {
   balanceAfter: number;
 }
 
-// Fix: added defaultSupplyRate to AppSettings interface to support global default rates configuration
 export interface AppSettings {
   id: string;
   farmRate: number;
-  defaultSupplyRate?: number;
   lastBackup?: Date;
 }
