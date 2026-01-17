@@ -177,7 +177,7 @@ const App: React.FC = () => {
           <NavItem active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={<LayoutDashboard size={20}/>} label="Overview" />
           <NavItem active={activeView === 'daily-record'} onClick={() => setActiveView('daily-record')} icon={<ClipboardList size={20}/>} label="Daily Sheet" />
           <NavItem active={activeView === 'customers'} onClick={() => setActiveView('customers')} icon={<Users size={20}/>} label="Customers" />
-          <NavItem active={activeView === 'reports'} onClick={() => setActiveView('reports'} icon={<BarChart3 size={20}/>} label="Analytics" />
+          <NavItem active={activeView === 'reports'} onClick={() => setActiveView('reports')} icon={<BarChart3 size={20}/>} label="Analytics" />
           <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-700">
             <NavItem active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<SettingsIcon size={20}/>} label="Settings" />
           </div>
@@ -198,7 +198,7 @@ const App: React.FC = () => {
         <MobileNavItem active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={<LayoutDashboard size={22}/>} label="Home" />
         <MobileNavItem active={activeView === 'daily-record'} onClick={() => setActiveView('daily-record')} icon={<ClipboardList size={22}/>} label="Sheet" />
         <MobileNavItem active={activeView === 'customers'} onClick={() => setActiveView('customers')} icon={<Users size={22}/>} label="Users" />
-        <MobileNavItem active={activeView === 'reports'} onClick={() => setActiveView('reports'} icon={<BarChart3 size={22}/>} label="Stats" />
+        <MobileNavItem active={activeView === 'reports'} onClick={() => setActiveView('reports')} icon={<BarChart3 size={22}/>} label="Stats" />
         <MobileNavItem active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<SettingsIcon size={22}/>} label="Menu" />
       </nav>
     </div>
