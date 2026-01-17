@@ -10,6 +10,7 @@ export interface ExtendedSettings extends AppSettings {
   isLockActive?: boolean;
   biometricEnabled?: boolean;
   lastSyncTimestamp?: string;
+  defaultSupplyRate?: number;
 }
 
 export class FarmLedgerDB extends Dexie {
@@ -27,9 +28,9 @@ export class FarmLedgerDB extends Dexie {
   }
 
   async getFullExport() {
-    const customers = await this.customers.toArray();
-    const transactions = await this.transactions.toArray();
-    const settings = await this.settings.toArray();
+    const customers = await db.customers.toArray();
+    const transactions = await db.transactions.toArray();
+    const settings = await db.settings.toArray();
     return {
       customers,
       transactions,
@@ -47,6 +48,7 @@ export async function initSettings() {
     await db.settings.add({ 
       id: 'global', 
       farmRate: 150, 
+      defaultSupplyRate: 10,
       autoSync: false,
       isLockActive: false,
       biometricEnabled: false,

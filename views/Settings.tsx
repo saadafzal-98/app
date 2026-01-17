@@ -18,7 +18,9 @@ import {
   Loader2,
   CheckCircle2,
   Globe,
-  Lock
+  Lock,
+  TrendingUp,
+  Percent
 } from 'lucide-react';
 
 interface SettingsProps {
@@ -31,6 +33,8 @@ const Settings: React.FC<SettingsProps> = ({ darkMode, setDarkMode, onSecurityUp
   const [syncUrl, setSyncUrl] = useState('');
   const [autoSync, setAutoSync] = useState(false);
   const [lastSync, setLastSync] = useState('Never');
+  const [farmRate, setFarmRate] = useState(0);
+  const [defaultSupplyRate, setDefaultSupplyRate] = useState(0);
   const [pin, setPin] = useState('');
   const [lockActive, setLockActive] = useState(false);
   const [biometric, setBiometric] = useState(false);
@@ -47,9 +51,20 @@ const Settings: React.FC<SettingsProps> = ({ darkMode, setDarkMode, onSecurityUp
         setLockActive(s.isLockActive || false);
         setBiometric(s.biometricEnabled || false);
         setLastSync(s.lastSyncTimestamp || 'Never');
+        setFarmRate(s.farmRate || 150);
+        setDefaultSupplyRate(s.defaultSupplyRate || 10);
       }
     });
   }, []);
+
+  const handleSaveBusiness = async () => {
+    await db.settings.update('global', { 
+      farmRate, 
+      defaultSupplyRate 
+    });
+    setStatus({ type: 'success', msg: 'Business rates updated!' });
+    setTimeout(() => setStatus(null), 3000);
+  };
 
   const handleSaveSecurity = async () => {
     if (lockActive && pin.length !== 4) {
@@ -73,21 +88,17 @@ const Settings: React.FC<SettingsProps> = ({ darkMode, setDarkMode, onSecurityUp
     }
     setSyncing(true);
     setSyncProgress(0);
-    
-    // Simulated sync stages
     const steps = [10, 30, 65, 90, 100];
     for (const step of steps) {
       setSyncProgress(step);
       await new Promise(resolve => setTimeout(resolve, 400));
     }
-
     const timestamp = new Date().toLocaleString();
     await db.settings.update('global', { 
       cloudSyncUrl: syncUrl, 
       autoSync,
       lastSyncTimestamp: timestamp
     });
-    
     setLastSync(timestamp);
     setSyncing(false);
     setStatus({ type: 'success', msg: 'Data synchronized with Cloud!' });
@@ -143,34 +154,55 @@ const Settings: React.FC<SettingsProps> = ({ darkMode, setDarkMode, onSecurityUp
         )}
       </header>
 
-      {/* Interface Section */}
+      {/* Business Configuration - FIXED HARDCODED VALUES */}
       <section className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm transition-all hover:shadow-md">
-         <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-               <div className="p-3.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl">
-                  {darkMode ? <Moon size={24} /> : <Sun size={24} />}
-               </div>
-               <div>
-                  <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Visual Theme</h2>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Toggle Light/Dark Interface</p>
-               </div>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-4">
+            <div className="p-3.5 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-2xl">
+              <TrendingUp size={24} />
             </div>
-            <button 
-              onClick={() => setDarkMode(!darkMode)} 
-              className={`relative w-16 h-8 rounded-full transition-all duration-300 border-2 ${
-                darkMode ? 'bg-emerald-500 border-emerald-400' : 'bg-slate-200 border-slate-100'
-              }`}
-            >
-              <div className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white shadow-xl transition-all duration-300 transform ${
-                darkMode ? 'translate-x-8' : ''
-              } flex items-center justify-center`}>
-                 {darkMode ? <Moon size={10} className="text-emerald-600" /> : <Sun size={10} className="text-amber-500" />}
-              </div>
-            </button>
-         </div>
+            <div>
+              <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Business Metrics</h2>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Rate & Pricing Standards</p>
+            </div>
+          </div>
+          <button 
+            onClick={handleSaveBusiness}
+            className="px-6 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg"
+          >
+            Update Rates
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="flex flex-col space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Base Farm Rate (Rs/kg)</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">Rs</span>
+              <input 
+                type="number" 
+                className="w-full pl-10 pr-4 py-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none font-black text-sm dark:text-white focus:border-amber-400 transition-colors"
+                value={farmRate}
+                onChange={(e) => setFarmRate(parseFloat(e.target.value) || 0)}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Default Supply Add-on</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">+</span>
+              <input 
+                type="number" 
+                className="w-full pl-10 pr-4 py-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-2xl outline-none font-black text-sm dark:text-white focus:border-amber-400 transition-colors"
+                value={defaultSupplyRate}
+                onChange={(e) => setDefaultSupplyRate(parseFloat(e.target.value) || 0)}
+              />
+            </div>
+          </div>
+        </div>
       </section>
 
-      {/* Cloud Sync Section - RESTORED & ENHANCED */}
+      {/* Cloud Sync Section */}
       <section className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm transition-all hover:shadow-md">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
@@ -188,10 +220,8 @@ const Settings: React.FC<SettingsProps> = ({ darkMode, setDarkMode, onSecurityUp
           <button 
             disabled={syncing}
             onClick={handleCloudSync}
-            className={`flex items-center space-x-2 px-5 py-2.5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
-              syncing 
-                ? 'bg-slate-100 dark:bg-slate-700 text-slate-400' 
-                : 'bg-blue-600 text-white hover:bg-blue-700 hover:scale-105 active:scale-95 shadow-lg shadow-blue-100 dark:shadow-none'
+            className={`flex items-center space-x-2 px-5 py-2.5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg ${
+              syncing ? 'bg-slate-100 dark:bg-slate-700 text-slate-400' : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
             {syncing ? <Loader2 className="animate-spin" size={14} /> : <RefreshCw size={14} />}
@@ -202,20 +232,15 @@ const Settings: React.FC<SettingsProps> = ({ darkMode, setDarkMode, onSecurityUp
         {syncing && (
           <div className="mb-6 animate-in fade-in slide-in-from-top-2">
              <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-blue-500 transition-all duration-300 rounded-full" 
-                  style={{ width: `${syncProgress}%` }}
-                ></div>
+                <div className="h-full bg-blue-500 transition-all duration-300 rounded-full" style={{ width: `${syncProgress}%` }}></div>
              </div>
-             <p className="text-[9px] font-bold text-blue-500 mt-2 uppercase tracking-widest">Transmitting data packets... {syncProgress}%</p>
+             <p className="text-[9px] font-bold text-blue-500 mt-2 uppercase tracking-widest">Transmitting data... {syncProgress}%</p>
           </div>
         )}
 
         <div className="space-y-4">
           <div className="flex flex-col space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center">
-              <Globe size={10} className="mr-1" /> Primary Sync Endpoint
-            </label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center"><Globe size={10} className="mr-1" /> Primary Sync Endpoint</label>
             <input 
               type="text" 
               placeholder="https://your-server.com/v1/sync"
@@ -224,22 +249,17 @@ const Settings: React.FC<SettingsProps> = ({ darkMode, setDarkMode, onSecurityUp
               onChange={(e) => setSyncUrl(e.target.value)}
             />
           </div>
-          
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
              <div className="flex items-center justify-between w-full sm:w-auto px-6 py-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 flex-1">
                 <div className="flex items-center space-x-3">
                    <Zap size={16} className="text-amber-500" />
-                   <div>
-                      <p className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Real-time Entry</p>
-                      <p className="text-[9px] font-bold text-slate-400">Sync on Every Save</p>
-                   </div>
+                   <div><p className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Real-time Entry</p></div>
                 </div>
                 <button onClick={() => setAutoSync(!autoSync)} className={`w-12 h-6 rounded-full transition-all ${autoSync ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
                   <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 shadow-sm ${autoSync ? 'translate-x-6' : ''}`} />
                 </button>
              </div>
-             
-             <div className="px-6 py-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col justify-center flex-1">
+             <div className="px-6 py-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col justify-center flex-1 text-center sm:text-left">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Last Valid Handshake</p>
                 <p className="text-xs font-black text-slate-700 dark:text-slate-300">{lastSync}</p>
              </div>
@@ -247,7 +267,7 @@ const Settings: React.FC<SettingsProps> = ({ darkMode, setDarkMode, onSecurityUp
         </div>
       </section>
 
-      {/* Security Section - BIOMETRIC & PIN */}
+      {/* Security Section */}
       <section className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm transition-all hover:shadow-md">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
@@ -284,69 +304,48 @@ const Settings: React.FC<SettingsProps> = ({ darkMode, setDarkMode, onSecurityUp
           {lockActive && (
             <div className="p-6 bg-slate-50 dark:bg-slate-900 rounded-[2rem] flex flex-col items-center space-y-4 animate-in slide-in-from-top-4 duration-300 border border-slate-100 dark:border-slate-800">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Configure Access Key</label>
-              <div className="flex items-center space-x-3">
-                 <input 
-                  type="password" 
-                  maxLength={4}
-                  inputMode="numeric"
-                  placeholder="****"
-                  className="w-48 p-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl text-center text-3xl tracking-[0.8em] font-black focus:border-emerald-500 outline-none dark:text-white transition-all shadow-inner"
-                  value={pin}
-                  onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                />
-              </div>
-              <p className="text-[9px] font-bold text-slate-400 flex items-center"><Info size={10} className="mr-1" /> Use a secure, non-sequential numeric pattern</p>
+              <input 
+                type="password" 
+                maxLength={4}
+                inputMode="numeric"
+                placeholder="****"
+                className="w-48 p-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl text-center text-3xl tracking-[0.8em] font-black focus:border-emerald-500 outline-none dark:text-white transition-all shadow-inner"
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+              />
             </div>
           )}
-
-          <div className="flex items-center justify-between border-t border-slate-50 dark:border-slate-700 pt-6 p-2">
-            <div className="flex items-center space-x-4">
-              <div className="p-2 bg-slate-50 dark:bg-slate-900 rounded-xl text-slate-400"><Fingerprint size={20} /></div>
-              <div>
-                <p className="text-sm font-black text-slate-900 dark:text-white tracking-tight">Biometric Unlock</p>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Use Native Fingerprint/FaceID</p>
-              </div>
-            </div>
-            <button onClick={() => setBiometric(!biometric)} className={`w-12 h-6 rounded-full transition-all ${biometric ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
-              <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 shadow-sm ${biometric ? 'translate-x-6' : ''}`} />
-            </button>
-          </div>
         </div>
       </section>
 
-      {/* Data Lifecycle Section */}
-      <section className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm transition-all hover:shadow-md">
-        <div className="flex items-center space-x-4 mb-8">
-          <div className="p-3.5 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-2xl">
-            <Database size={24} />
-          </div>
-          <div>
-            <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Data Integrity</h2>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Backup & Restoration Engine</p>
-          </div>
-        </div>
+      {/* Interface Toggle */}
+      <section className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm">
+         <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+               <div className="p-3.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl">{darkMode ? <Moon size={24} /> : <Sun size={24} />}</div>
+               <div>
+                  <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Visual Theme</h2>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Interface Mode</p>
+               </div>
+            </div>
+            <button onClick={() => setDarkMode(!darkMode)} className={`relative w-16 h-8 rounded-full transition-all duration-300 border-2 ${darkMode ? 'bg-emerald-500 border-emerald-400' : 'bg-slate-200 border-slate-100'}`}>
+              <div className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white shadow-xl transition-all duration-300 transform ${darkMode ? 'translate-x-8' : ''}`} />
+            </button>
+         </div>
+      </section>
 
+      {/* Data Lifecycle */}
+      <section className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <button onClick={exportData} className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-100 dark:border-slate-700 rounded-3xl hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 transition-all text-slate-500 dark:text-slate-400 group">
-            <Download size={32} className="mb-3 group-hover:text-emerald-500 transition-transform group-hover:-translate-y-1" />
-            <span className="font-black uppercase tracking-widest text-[10px] group-hover:text-slate-900 dark:group-hover:text-white">Export Ledger Asset</span>
-            <p className="text-[9px] mt-1 font-bold">Local JSON Format</p>
+            <Download size={32} className="mb-3 group-hover:text-emerald-500" />
+            <span className="font-black uppercase tracking-widest text-[10px] group-hover:text-slate-900 dark:group-hover:text-white">Export Ledger</span>
           </button>
           <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-100 dark:border-slate-700 rounded-3xl hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-all text-slate-500 dark:text-slate-400 group cursor-pointer">
-            <Upload size={32} className="mb-3 group-hover:text-indigo-500 transition-transform group-hover:-translate-y-1" />
-            <span className="font-black uppercase tracking-widest text-[10px] group-hover:text-slate-900 dark:group-hover:text-white">Restore from Asset</span>
-            <p className="text-[9px] mt-1 font-bold">Replace active database</p>
+            <Upload size={32} className="mb-3 group-hover:text-indigo-500" />
+            <span className="font-black uppercase tracking-widest text-[10px] group-hover:text-slate-900 dark:group-hover:text-white">Restore Ledger</span>
             <input type="file" className="hidden" accept=".json" onChange={importData} />
           </label>
-        </div>
-        
-        <div className="mt-10 pt-8 border-t border-slate-50 dark:border-slate-700 text-center">
-           <button 
-             onClick={async () => { if (window.confirm("CRITICAL: ERASE ALL LOCAL LEDGER DATA?")) { await (db as any).delete(); window.location.reload(); } }} 
-             className="px-8 py-3 text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-2xl transition-all font-black text-[10px] uppercase tracking-[0.2em] border border-rose-100 dark:border-rose-900/50 shadow-sm"
-           >
-             Terminal Reset: Destroy Local DB
-           </button>
         </div>
       </section>
     </div>
