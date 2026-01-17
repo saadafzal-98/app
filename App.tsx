@@ -6,9 +6,8 @@ import {
   BarChart3, 
   Settings as SettingsIcon,
   ClipboardList,
-  Plus,
   Lock,
-  Delete
+  Trash2
 } from 'lucide-react';
 import { db, initSettings } from './db';
 import Dashboard from './views/Dashboard';
@@ -17,8 +16,10 @@ import DailyRecord from './views/DailyRecord';
 import Reports from './views/Reports';
 import Settings from './views/Settings';
 import CustomerDetail from './views/CustomerDetail';
+import AddSupply from './views/AddSupply';
+import AddPayment from './views/AddPayment';
 
-type View = 'dashboard' | 'customers' | 'daily-record' | 'reports' | 'settings' | 'customer-detail';
+type View = 'dashboard' | 'customers' | 'daily-record' | 'reports' | 'settings' | 'customer-detail' | 'add-supply' | 'add-payment';
 
 const LockScreen: React.FC<{ onUnlock: () => void, correctPin: string }> = ({ onUnlock, correctPin }) => {
   const [pin, setPin] = useState('');
@@ -45,22 +46,22 @@ const LockScreen: React.FC<{ onUnlock: () => void, correctPin: string }> = ({ on
   return (
     <div className="fixed inset-0 z-[100] bg-slate-900 flex flex-col items-center justify-center p-6 page-transition">
       <div className="mb-12 flex flex-col items-center">
-        <div className={`w-20 h-20 gradient-primary rounded-[2rem] flex items-center justify-center text-white mb-6 shadow-2xl ${error ? 'animate-shake' : ''}`}>
-          <Lock size={36} />
+        <div className={`w-24 h-24 gradient-primary rounded-[2.5rem] flex items-center justify-center text-white mb-6 shadow-2xl ${error ? 'animate-shake' : ''}`}>
+          <Lock size={40} />
         </div>
-        <h1 className="text-3xl font-black text-white tracking-tight">Ledger Secure</h1>
-        <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px] mt-2">Authentication Required</p>
+        <h1 className="text-3xl font-black text-white tracking-tight">Ledger Pro</h1>
+        <p className="text-emerald-400 font-bold uppercase tracking-[0.2em] text-[10px] mt-2">Identity Verification Required</p>
       </div>
 
-      <div className="flex space-x-5 mb-16">
+      <div className="flex space-x-6 mb-16">
         {[0, 1, 2, 3].map((i) => (
           <div 
             key={i} 
-            className={`w-4 h-4 rounded-full border-2 transition-all duration-300 ${
+            className={`w-5 h-5 rounded-full border-2 transition-all duration-300 ${
               pin.length > i 
-                ? 'bg-emerald-500 border-emerald-500 scale-125 shadow-[0_0_15px_rgba(16,185,129,0.5)]' 
+                ? 'bg-emerald-500 border-emerald-500 scale-125 shadow-[0_0_20px_rgba(16,185,129,0.6)]' 
                 : 'border-slate-700'
-            } ${error ? 'border-rose-500 bg-rose-500 animate-pulse' : ''}`}
+            } ${error ? 'border-rose-500 bg-rose-500 animate-shake' : ''}`}
           />
         ))}
       </div>
@@ -70,7 +71,7 @@ const LockScreen: React.FC<{ onUnlock: () => void, correctPin: string }> = ({ on
           <button 
             key={num} 
             onClick={() => handlePress(num.toString())}
-            className="w-20 h-20 rounded-full bg-slate-800/50 text-white text-3xl font-bold hover:bg-slate-700 active:scale-90 transition-all border border-slate-700/30 flex items-center justify-center"
+            className="w-20 h-20 rounded-2xl bg-slate-800/50 text-white text-3xl font-bold hover:bg-slate-700 active:scale-90 transition-all border border-slate-700/30 flex items-center justify-center backdrop-blur-sm"
           >
             {num}
           </button>
@@ -78,15 +79,15 @@ const LockScreen: React.FC<{ onUnlock: () => void, correctPin: string }> = ({ on
         <div />
         <button 
           onClick={() => handlePress('0')}
-          className="w-20 h-20 rounded-full bg-slate-800/50 text-white text-3xl font-bold hover:bg-slate-700 active:scale-90 transition-all border border-slate-700/30 flex items-center justify-center"
+          className="w-20 h-20 rounded-2xl bg-slate-800/50 text-white text-3xl font-bold hover:bg-slate-700 active:scale-90 transition-all border border-slate-700/30 flex items-center justify-center backdrop-blur-sm"
         >
           0
         </button>
         <button 
           onClick={() => setPin(pin.slice(0, -1))}
-          className="w-20 h-20 rounded-full bg-slate-800/20 text-slate-500 flex items-center justify-center hover:text-white transition-colors active:scale-90"
+          className="w-20 h-20 rounded-2xl bg-slate-800/20 text-slate-500 flex items-center justify-center hover:text-white transition-colors active:scale-90"
         >
-          <Delete size={28} />
+          <Trash2 size={28} />
         </button>
       </div>
       
@@ -96,7 +97,7 @@ const LockScreen: React.FC<{ onUnlock: () => void, correctPin: string }> = ({ on
           25% { transform: translateX(-8px); }
           75% { transform: translateX(8px); }
         }
-        .animate-shake { animation: shake 0.2s ease-in-out 0s 2; }
+        .animate-shake { animation: shake 0.2s ease-in-out; }
       `}</style>
     </div>
   );
@@ -154,6 +155,8 @@ const App: React.FC = () => {
             onBack={() => setActiveView('customers')} 
           />
         ) : null;
+      case 'add-supply': return <AddSupply onSuccess={() => setActiveView('dashboard')} />;
+      case 'add-payment': return <AddPayment onSuccess={() => setActiveView('dashboard')} />;
       default: return <Dashboard onCustomerSelect={navigateToCustomerDetail} />;
     }
   };
@@ -162,60 +165,86 @@ const App: React.FC = () => {
   if (isLocked) return <LockScreen correctPin={correctPin} onUnlock={() => setIsLocked(false)} />;
 
   return (
-    <div className="min-h-screen flex flex-col pb-24 md:pb-0 md:pl-64 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors">
+    <div className="min-h-screen flex flex-col pb-24 md:pb-0 md:pl-64 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors selection:bg-emerald-100 dark:selection:bg-emerald-900">
+      {/* Sidebar Navigation (Desktop) */}
       <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 fixed inset-y-0 left-0 z-50">
         <div className="p-8">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center text-white font-bold">L</div>
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg">L</div>
             <div>
-              <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">Ledger</h1>
-              <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Premium</p>
+              <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Ledger Pro</h1>
+              <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mt-1">Enterprise Edition</p>
             </div>
           </div>
         </div>
-        <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
-          <NavItem active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={<LayoutDashboard size={20}/>} label="Overview" />
-          <NavItem active={activeView === 'daily-record'} onClick={() => setActiveView('daily-record')} icon={<ClipboardList size={20}/>} label="Daily Sheet" />
-          <NavItem active={activeView === 'customers'} onClick={() => setActiveView('customers')} icon={<Users size={20}/>} label="Customers" />
-          <NavItem active={activeView === 'reports'} onClick={() => setActiveView('reports')} icon={<BarChart3 size={20}/>} label="Analytics" />
-          <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-700">
-            <NavItem active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<SettingsIcon size={20}/>} label="Settings" />
+        <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto no-scrollbar">
+          <NavItem active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={<LayoutDashboard size={20}/>} label="Executive Home" />
+          <NavItem active={activeView === 'daily-record'} onClick={() => setActiveView('daily-record')} icon={<ClipboardList size={20}/>} label="Today's Sheet" />
+          <NavItem active={activeView === 'customers'} onClick={() => setActiveView('customers')} icon={<Users size={20}/>} label="Customer Hub" />
+          {/* Fix: changed duplicate onClick to icon attribute */}
+          <NavItem active={activeView === 'reports'} icon={<BarChart3 size={20}/>} onClick={() => setActiveView('reports')} label="Insights & Stats" />
+          
+          <div className="pt-6 mt-6 border-t border-slate-100 dark:border-slate-700">
+            <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">System</p>
+            <NavItem active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<SettingsIcon size={20}/>} label="Control Panel" />
           </div>
         </nav>
       </aside>
 
+      {/* Main Content Area */}
       <main className="flex-1 p-4 md:p-10 max-w-7xl mx-auto w-full">
+        {/* Mobile Header */}
         <div className="md:hidden flex justify-between items-center mb-6 px-2">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center text-white font-bold">L</div>
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg">L</div>
             <h1 className="text-2xl font-black tracking-tight dark:text-white">Ledger</h1>
           </div>
+          <button 
+            onClick={() => setActiveView('settings')}
+            className="p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm"
+          >
+            <SettingsIcon size={20} className="text-slate-500" />
+          </button>
         </div>
         {renderView()}
       </main>
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 glass-card border-t border-slate-200 dark:border-slate-800 flex justify-around items-center h-20 px-4 z-50 rounded-t-3xl shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.05)]">
-        <MobileNavItem active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={<LayoutDashboard size={22}/>} label="Home" />
-        <MobileNavItem active={activeView === 'daily-record'} onClick={() => setActiveView('daily-record')} icon={<ClipboardList size={22}/>} label="Sheet" />
-        <MobileNavItem active={activeView === 'customers'} onClick={() => setActiveView('customers')} icon={<Users size={22}/>} label="Users" />
-        <MobileNavItem active={activeView === 'reports'} onClick={() => setActiveView('reports')} icon={<BarChart3 size={22}/>} label="Stats" />
-        <MobileNavItem active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<SettingsIcon size={22}/>} label="Menu" />
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 glass-card border-t border-slate-200 dark:border-slate-800 flex justify-around items-center h-22 px-4 z-50 rounded-t-[2.5rem] shadow-[0_-15px_35px_-5px_rgba(0,0,0,0.08)]">
+        <MobileNavItem active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={<LayoutDashboard size={24}/>} label="Home" />
+        <MobileNavItem active={activeView === 'daily-record'} onClick={() => setActiveView('daily-record')} icon={<ClipboardList size={24}/>} label="Sheet" />
+        <MobileNavItem active={activeView === 'customers'} onClick={() => setActiveView('customers')} icon={<Users size={24}/>} label="Clients" />
+        <MobileNavItem active={activeView === 'reports'} onClick={() => setActiveView('reports')} icon={<BarChart3 size={24}/>} label="Stats" />
       </nav>
     </div>
   );
 };
 
 const NavItem = ({ active, onClick, icon, label }: any) => (
-  <button onClick={onClick} className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl font-bold transition-all duration-200 ${active ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 shadow-sm' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-100'}`}>
-    <span className={active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}>{icon}</span>
+  <button 
+    onClick={onClick} 
+    className={`w-full flex items-center space-x-3.5 px-5 py-4 rounded-2xl font-bold transition-all duration-300 ${
+      active 
+        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200 dark:shadow-none' 
+        : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-100'
+    }`}
+  >
+    <span className={active ? 'text-white' : 'text-slate-400 group-hover:text-emerald-500'}>{icon}</span>
     <span className="text-sm tracking-tight">{label}</span>
   </button>
 );
 
 const MobileNavItem = ({ active, onClick, icon, label }: any) => (
-  <button onClick={onClick} className={`flex flex-col items-center justify-center w-full h-full space-y-1.5 transition-all duration-300 ${active ? 'text-emerald-600 dark:text-emerald-400 scale-110' : 'text-slate-400 dark:text-slate-500 opacity-60'}`}>
+  <button 
+    onClick={onClick} 
+    className={`flex flex-col items-center justify-center w-full h-full space-y-1.5 transition-all duration-300 ${
+      active 
+        ? 'text-emerald-600 dark:text-emerald-400 scale-110' 
+        : 'text-slate-400 dark:text-slate-500 opacity-60'
+    }`}
+  >
     <div className={`p-1 ${active ? 'tab-active' : ''}`}>{icon}</div>
-    <span className="text-[9px] font-extrabold uppercase tracking-[0.1em]">{label}</span>
+    <span className="text-[10px] font-black uppercase tracking-[0.12em]">{label}</span>
   </button>
 );
 

@@ -5,7 +5,7 @@ import { Customer, Transaction, TransactionType } from '../types';
 import { formatPKR, formatDate } from '../utils/formatters';
 import { ArrowLeft, Trash2, Droplets, CreditCard, Clock, LineChart, FileText, Share2, FileDown } from 'lucide-react';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 interface CustomerDetailProps {
   customerId: number;
@@ -110,7 +110,7 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({ customerId, onBack }) =
       formatPKR(t.balanceAfter)
     ]);
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       startY: 75,
       head: [['Date', 'Type', 'Rate Info', 'Amount', 'Balance']],
       body: tableData,

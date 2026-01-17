@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { db } from '../db';
 import { Customer, Transaction, TransactionType } from '../types';
 import { formatPKR, formatInputDate, formatDate, getStartOfDay } from '../utils/formatters';
-import { Save, CheckCircle2, Loader2, RotateCcw, History, ArrowRight } from 'lucide-react';
+import { Save, CheckCircle2, Loader2, RotateCcw, History, ArrowRight, TrendingUp, Calendar as CalendarIcon, Hash } from 'lucide-react';
 
 interface DailyRecordProps { onSuccess: () => void; }
 
@@ -114,6 +114,7 @@ const DailyRecord: React.FC<DailyRecordProps> = ({ onSuccess }) => {
 
           const dailyRate = farmRate + c.supplyRate;
 
+          // Supply Logic
           if (newQty > 0) {
             const amount = newQty * dailyRate;
             if (oldSupply) {
@@ -134,6 +135,7 @@ const DailyRecord: React.FC<DailyRecordProps> = ({ onSuccess }) => {
             await db.transactions.delete(oldSupply.id!);
           }
 
+          // Payment Logic
           if (newPay > 0) {
             if (oldPayment) {
               await db.transactions.update(oldPayment.id!, { amount: newPay });
@@ -151,6 +153,7 @@ const DailyRecord: React.FC<DailyRecordProps> = ({ onSuccess }) => {
             await db.transactions.delete(oldPayment.id!);
           }
 
+          // Recalculate balance chain
           const allCustomerTrans = await db.transactions
             .where('customerId').equals(c.id!)
             .toArray();
@@ -158,9 +161,7 @@ const DailyRecord: React.FC<DailyRecordProps> = ({ onSuccess }) => {
           allCustomerTrans.sort((a, b) => {
             const dateDiff = a.date.getTime() - b.date.getTime();
             if (dateDiff !== 0) return dateDiff;
-            if (a.type !== b.type) {
-              return a.type === TransactionType.SUPPLY ? -1 : 1;
-            }
+            if (a.type !== b.type) return a.type === TransactionType.SUPPLY ? -1 : 1;
             return (a.id || 0) - (b.id || 0);
           });
 
@@ -194,7 +195,7 @@ const DailyRecord: React.FC<DailyRecordProps> = ({ onSuccess }) => {
       setTimeout(() => onSuccess(), 1500);
     } catch (err) {
       console.error(err);
-      alert("System Error: Could not synchronize ledger.");
+      alert("System Sync Error: Please try again or check settings.");
     } finally {
       setLoading(false);
     }
@@ -203,128 +204,142 @@ const DailyRecord: React.FC<DailyRecordProps> = ({ onSuccess }) => {
   if (completed) {
     return (
       <div className="flex flex-col items-center justify-center py-24 space-y-6 page-transition">
-        <div className="w-24 h-24 bg-emerald-100 dark:bg-emerald-900/40 rounded-[2rem] flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-xl shadow-emerald-50 dark:shadow-none">
+        <div className="w-24 h-24 gradient-primary rounded-[2.5rem] flex items-center justify-center text-white shadow-2xl animate-in zoom-in">
           <CheckCircle2 size={56} strokeWidth={2.5} />
         </div>
         <div className="text-center">
-           <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Sheet Synchronized</h2>
-           <p className="text-slate-500 dark:text-slate-400 font-bold mt-2 uppercase tracking-widest text-xs">Chain re-calculated successfully</p>
+           <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Sheet Updated</h2>
+           <p className="text-slate-500 dark:text-slate-400 font-bold mt-2 uppercase tracking-[0.2em] text-xs">All Ledger balances recalculated</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto page-transition pb-20 px-1">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div className="space-y-8 max-w-5xl mx-auto page-transition pb-24">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Daily Record</h1>
-          <div className="flex items-center space-x-3 mt-2">
-            <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">{formatDate(date)}</span>
-            <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></div>
+          <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Supply Sheet</h1>
+          <div className="flex items-center space-x-3 mt-2.5">
+            <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">{formatDate(date)}</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700"></div>
             {isNewRecord ? (
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 uppercase border border-emerald-100 dark:border-emerald-800 tracking-wider">Fresh Session</span>
+              <span className="text-[10px] font-black px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 uppercase border border-emerald-100 dark:border-emerald-800 tracking-wider">Start Fresh</span>
             ) : (
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 uppercase border border-amber-100 dark:border-amber-800 tracking-wider">Editing Entry</span>
+              <span className="text-[10px] font-black px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 uppercase border border-amber-100 dark:border-amber-800 tracking-wider">Modify Existing</span>
             )}
           </div>
         </div>
-        
-        <div className="flex items-center space-x-3 bg-white dark:bg-slate-800 p-2.5 rounded-[1.5rem] border border-slate-200 dark:border-slate-700 shadow-sm">
-           <div className="flex flex-col px-3 border-r border-slate-100 dark:border-slate-700">
-              <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">Entry Date</span>
-              <input 
-                type="date" 
-                className="bg-transparent text-sm font-bold outline-none text-slate-900 dark:text-white"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
-           </div>
-           <div className="flex flex-col px-3">
-              <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">Base Rate</span>
-              <div className="flex items-center space-x-1">
-                 <span className="text-emerald-600 dark:text-emerald-400 text-[10px] font-black">Rs</span>
-                 <input 
-                   type="number" 
-                   min="0"
-                   placeholder="Rate"
-                   className="bg-transparent text-sm font-black outline-none w-16 text-slate-900 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                   value={farmRate === 0 ? '' : farmRate}
-                   onChange={(e) => {
-                     const val = parseFloat(e.target.value);
-                     setFarmRate(isNaN(val) || val < 0 ? 0 : val);
-                   }}
-                 />
-              </div>
-           </div>
-        </div>
       </header>
 
-      <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
-        <div className="overflow-x-auto">
+      {/* Sheet Configuration Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-700 shadow-xl shadow-slate-200/40 dark:shadow-none flex flex-col justify-center relative overflow-hidden group">
+          <div className="relative z-10">
+             <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Rate Control</span>
+                <Hash size={18} className="text-emerald-500" />
+             </div>
+             <h2 className="text-sm font-black uppercase tracking-widest mb-5 dark:text-white">Base Market Rate</h2>
+             <div className="flex items-baseline space-x-3 border-b-2 border-slate-100 dark:border-slate-700 focus-within:border-emerald-500 transition-all pb-2">
+                <span className="text-2xl font-black text-slate-300">Rs.</span>
+                <input 
+                  type="number" 
+                  className="bg-transparent text-5xl font-black outline-none w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none dark:text-white"
+                  value={farmRate === 0 ? '' : farmRate}
+                  onChange={(e) => setFarmRate(parseFloat(e.target.value) || 0)}
+                  placeholder="000"
+                />
+             </div>
+             <p className="text-[10px] font-bold text-slate-400 mt-5 uppercase tracking-wider flex items-center">
+                Applied to all supply entries for this date.
+             </p>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-700 shadow-xl shadow-slate-200/40 dark:shadow-none flex flex-col justify-center">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Timeline</span>
+            <CalendarIcon size={18} className="text-indigo-500" />
+          </div>
+          <h2 className="text-sm font-black uppercase tracking-widest mb-5 dark:text-white">Reporting Date</h2>
+          <input 
+            type="date" 
+            className="w-full bg-slate-50 dark:bg-slate-900 p-5 rounded-2xl text-2xl font-black outline-none text-slate-900 dark:text-white border-2 border-transparent focus:border-indigo-500 transition-all shadow-inner"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
+          <p className="text-[10px] font-bold text-slate-400 mt-5 uppercase tracking-wider">
+            Fetching ledger history for this period...
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-slate-800 rounded-[3rem] border border-slate-100 dark:border-slate-700 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
+        <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/80 dark:bg-slate-900/50">
-                <th className="px-8 py-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Customer Entity</th>
+                <th className="px-8 py-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Customer Name</th>
                 <th className="px-8 py-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] text-center">Volume (Kg)</th>
-                <th className="px-8 py-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] text-center">Received (Rs)</th>
+                <th className="px-8 py-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] text-center">Cash (Rs)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
               {customers.map(c => (
-                <tr key={c.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-colors group">
+                <tr key={c.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-all group">
                   <td className="px-8 py-6">
-                    <div className="font-extrabold text-slate-900 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">{c.name}</div>
-                    <div className="flex items-center space-x-2 mt-1.5">
-                       <span className={`text-[10px] font-black uppercase tracking-wider ${c.currentBalance > 0 ? 'text-rose-500' : 'text-emerald-500 dark:text-emerald-400'}`}>
-                          Bal: {formatPKR(c.currentBalance)}
+                    <div className="font-black text-slate-900 dark:text-white text-lg tracking-tight group-hover:text-emerald-600 transition-colors">{c.name}</div>
+                    <div className="flex items-center space-x-2.5 mt-2">
+                       <span className={`text-[10px] font-black uppercase tracking-widest ${c.currentBalance > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                          Due: {formatPKR(c.currentBalance)}
                        </span>
                        <span className="w-1 h-1 rounded-full bg-slate-200 dark:bg-slate-600"></span>
-                       <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Rate: {farmRate + c.supplyRate}</span>
+                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Rate: {farmRate + c.supplyRate}</span>
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <div className="relative max-w-[140px] mx-auto">
+                    <div className="relative max-w-[150px] mx-auto">
                        <input 
                          type="number" 
                          inputMode="decimal"
-                         placeholder="0.00"
-                         className={`w-full py-4 text-center font-black text-lg rounded-2xl outline-none transition-all border-2 ${
+                         placeholder="0.0"
+                         className={`w-full py-4 text-center font-black text-xl rounded-2xl outline-none transition-all border-2 ${
                            inputs[c.id!]?.qty 
-                            ? 'border-emerald-500 dark:border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-900 dark:text-emerald-100' 
-                            : 'border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-400 focus:border-slate-300 dark:focus:border-slate-600'
+                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-900 dark:text-white' 
+                            : 'border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-300 focus:border-slate-300 dark:focus:border-slate-600'
                          }`}
                          value={inputs[c.id!]?.qty || ''}
                          onChange={(e) => handleInputChange(c.id!, 'qty', e.target.value)}
                        />
-                       {inputs[c.id!]?.qty && <div className="absolute -top-2 -right-2 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg"><CheckCircle2 size={12} /></div>}
+                       {inputs[c.id!]?.qty && <div className="absolute -top-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg animate-in zoom-in"><CheckCircle2 size={14} strokeWidth={3} /></div>}
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <div className="relative max-w-[140px] mx-auto">
+                    <div className="relative max-w-[150px] mx-auto">
                        <input 
                          type="number" 
                          inputMode="numeric"
                          placeholder="0"
-                         className={`w-full py-4 text-center font-black text-lg rounded-2xl outline-none transition-all border-2 ${
+                         className={`w-full py-4 text-center font-black text-xl rounded-2xl outline-none transition-all border-2 ${
                            inputs[c.id!]?.pay 
-                            ? 'border-indigo-500 dark:border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-900 dark:text-indigo-100' 
-                            : 'border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-400 focus:border-slate-300 dark:focus:border-slate-600'
+                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-900 dark:text-white' 
+                            : 'border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-300 focus:border-slate-300 dark:focus:border-slate-600'
                          }`}
                          value={inputs[c.id!]?.pay || ''}
                          onChange={(e) => handleInputChange(c.id!, 'pay', e.target.value)}
                        />
-                       {inputs[c.id!]?.pay && <div className="absolute -top-2 -right-2 w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center text-white shadow-lg"><CheckCircle2 size={12} /></div>}
+                       {inputs[c.id!]?.pay && <div className="absolute -top-2 -right-2 w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center text-white shadow-lg animate-in zoom-in"><CheckCircle2 size={14} strokeWidth={3} /></div>}
                     </div>
                   </td>
                 </tr>
               ))}
               {customers.length === 0 && (
                 <tr>
-                   <td colSpan={3} className="px-8 py-20 text-center">
-                      <div className="flex flex-col items-center opacity-30">
-                        <Loader2 size={40} className="mb-4 animate-spin text-slate-400" />
-                        <p className="font-bold uppercase tracking-widest text-xs dark:text-slate-400">Awaiting Customer Registry</p>
+                   <td colSpan={3} className="px-8 py-32 text-center">
+                      <div className="flex flex-col items-center opacity-20">
+                        <Loader2 size={48} className="mb-4 animate-spin text-slate-400" />
+                        <p className="font-black uppercase tracking-[0.3em] text-xs">Waiting for active registry...</p>
                       </div>
                    </td>
                 </tr>
@@ -334,31 +349,34 @@ const DailyRecord: React.FC<DailyRecordProps> = ({ onSuccess }) => {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-6 p-4">
-         <div className="flex items-center space-x-3">
-            <div className="p-3 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-2xl border border-amber-100 dark:border-amber-800">
-               <History size={20} />
-            </div>
-            <div>
-               <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Active Mechanism</p>
-               <p className="text-xs font-bold text-slate-600 dark:text-slate-400">Automated Balance Chain Re-Calculation</p>
-            </div>
-         </div>
-         
-         <button
-           onClick={handleSave}
-           disabled={loading || customers.length === 0}
-           className="w-full sm:w-auto gradient-primary text-white px-12 py-5 rounded-[1.5rem] font-black shadow-2xl shadow-emerald-200 dark:shadow-none hover:scale-105 active:scale-95 transition-all flex items-center justify-center space-x-3 disabled:opacity-50"
-         >
-           {loading ? (
-             <Loader2 className="animate-spin h-6 w-6" />
-           ) : (
-             <>
-               <span className="uppercase tracking-[0.1em]">{isNewRecord ? 'Commit Records' : 'Sync History'}</span>
-               <ArrowRight size={20} />
-             </>
-           )}
-         </button>
+      {/* Action Bar */}
+      <div className="fixed bottom-24 md:bottom-8 left-4 right-4 md:left-72 md:right-8 z-40">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl p-5 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-2xl shadow-emerald-200/50 dark:shadow-none">
+           <div className="flex items-center space-x-4 pl-4">
+              <div className="p-3 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-200/50">
+                 <History size={20} />
+              </div>
+              <div>
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Balance Engine</p>
+                 <p className="text-xs font-bold text-slate-600 dark:text-slate-300">Auto-Chain Recalculation Ready</p>
+              </div>
+           </div>
+           
+           <button
+             onClick={handleSave}
+             disabled={loading || customers.length === 0}
+             className="w-full sm:w-auto gradient-primary text-white px-10 py-5 rounded-2xl font-black shadow-xl shadow-emerald-600/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center space-x-3 disabled:opacity-50"
+           >
+             {loading ? (
+               <Loader2 className="animate-spin h-6 w-6" />
+             ) : (
+               <>
+                 <span className="uppercase tracking-[0.15em]">{isNewRecord ? 'Authorize Save' : 'Update History'}</span>
+                 <ArrowRight size={20} />
+               </>
+             )}
+           </button>
+        </div>
       </div>
     </div>
   );
