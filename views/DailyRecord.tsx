@@ -349,8 +349,8 @@ const DailyRecord: React.FC<DailyRecordProps> = ({ onSuccess }) => {
         </div>
       </div>
 
-      {/* Action Bar */}
-      <div className="fixed bottom-24 md:bottom-8 left-4 right-4 md:left-72 md:right-8 z-40">
+      {/* Action Bar - Moved from 'fixed' to standard flow at the end */}
+      <div className="mt-12 px-2 pb-12">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl p-5 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-2xl shadow-emerald-200/50 dark:shadow-none">
            <div className="flex items-center space-x-4 pl-4">
               <div className="p-3 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-200/50">
